@@ -17,7 +17,6 @@ get-current definitions
 6 constant w
 7 constant e
 
-
 : terrain:
     create ,
 ;
@@ -52,7 +51,10 @@ create hextab
 pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
 
 
-15 enums:  plains ltwood woods jungle swamp hills woodedhills ltwoodedhills scrub rough desert mountains coast sea impass
+15 enums:  plains ltwood woods
+           jungle swamp hills woodedhills
+           ltwoodedhills scrub rough
+           desert mountains coast sea impass
 
 \ Each hex is a line in a block file consisting of (cells):
 \ 0 Terrain type
@@ -158,6 +160,280 @@ here swap - constant template-length
     update
 ;
 
+
+: row ( hex -- y)
+    100 mod ;
+
+: col 100 / ;
+
+: col? ( x y -- flag )
+    drop
+    1 52 between?
+;
+
+: oddcol? ( hex# -- flag)
+    100 / odd? ;
+
+: row? ( x y -- flag)
+    swap odd? if
+        100 mod 1 34 between?
+    else
+        100 mod 1 33 between?
+    then
+;
+
+\ Hex to north
+\ Return 0 for hexes off map
+: hex>n ( hex -- hex2)
+    1- dup row 0<> and   \ faster than row?
+;
+
+\ hex to south
+: hex>s
+    1+
+    dup hex#>xy
+    row? and
+;
+
+: test+convert ( x y -- hex#)
+    2dup row? -if 2drop 0. else
+        2dup col? -if 2drop 0. then then
+    xy>hex#
+;
+
+\ hex to ne
+: hex>ne
+    hex#>xy
+    over odd? + ( x y2)
+    swap 1+ swap    ( x2 y2)
+    test+convert
+;
+
+: hex>se
+    hex#>xy
+    over odd? not negate +
+    swap 1+ swap
+    test+convert
+;
+
+: hex>s
+    1+
+    dup dup oddcol? -
+    100 mod 34 < and
+;
+
+: hex>sw
+    hex#>xy
+    over odd? not negate + 
+    swap 1- swap test+convert
+;
+
+: hex>nw
+    hex#>xy
+    over odd? +
+    swap 1- swap test+convert
+;
+
+: hex>w
+    100 - dup 99 > and ;
+
+\ bias north on bottom row
+: hex>e
+    dup 100 mod 34 =  \ flag=0 or -1
+    100 + +
+    dup 5300 < and ;
+
+create steptab
+' hex>n , ' hex>ne , ' hex>se ,
+' hex>s , ' hex>sw , ' hex>nw ,
+' hex>w , ' hex>e ,
+
+: dir>hex ( hex dir -- hex2)
+    dup>r
+    r@    -if  hex>n   rdrop exit then
+    r@ 1 = if  hex>ne  rdrop exit then
+    r@ 2 = if  hex>se  rdrop exit then
+    r@ 3 = if  hex>s   rdrop exit then
+    r@ 4 = if  hex>sw  rdrop exit then
+    r@ 5 = if  hex>nw  rdrop exit then
+    rdrop 1 throw
+;
+
+: ?l+ ?dup if l+ then ;
+
+: neighbours ( hex# -- hex#1 hex#2...hexnn n)
+    >r 
+    list
+    r@ hex>nw ?l+
+    r@ hex>sw ?l+
+    r@ hex>s  ?l+
+    r@ hex>se ?l+
+    r@ hex>ne ?l+
+    r@ hex>n  ?l+
+    rdrop
+;
+
+: incoming! ( hexes l cost1 hex# -- )   \ 0 1  2  3 4  5
+    rot times ( hexn cost1 hex# )       \ n ne se s sw nw
+        rot ?dup if  ( cost1 hex# hexn )
+            >hex @ cost  ( cost1 hex# cost2)
+            rot tuck + 2/   ( hex# cost1 costIn)
+            2 pick >hex i 1+ cells+ ! update
+            swap ( cost1 hex#)
+        else ( cost1 hex#)
+            0 over >hex i 1+ cells+ ! update
+        then
+    iterate
+    2drop
+;
+
+\ average cost with my own cost
+: dir! ( hex# cost1 FromDirection -- )
+    rot ?dup if ( cost1 from hex#)
+        >hex dup @ cost  ( cost1 from hex^ cost2 )
+\        .s cr
+        -rot ( c1 c2 from hex)
+        swap 1+ cells+ ( c1 c2 c^^ )
+        -rot + 2/ swap ! update
+    else
+        2drop
+    then
+;
+
+\ entering this hex from this face carries
+\ a different cost.
+: side!  ( hex# cost1 direction -- )
+    1+ cells rot >hex + ! update
+;
+
+: hexhexdir ( hex1 hex2 --- dir)
+    >r
+    neighbours drop
+    r@ = if rdrop 5 drops 0  exit then
+    r@ = if rdrop 4 drops 1 exit then
+    r@ = if rdrop 3 drops 2 exit then
+    r@ = if rdrop 2drop   3 exit then
+    r@ = if rdrop drop    4 exit then
+    r@ = if rdrop         5 exit then
+    rdrop 2 throw
+;
+
+: (connect) ( cost dir1 hex1 hex2 )
+    >r rot dup>r  ( d1 h1 cost | h2 cost)
+    rot dup opposite >r  ( h1 cost dir1 | h2 cost dir2)
+    side!
+    r> r> r> -rot swap side! update
+;
+    
+
+: connect ( cost hex1# hex2 -- ) ( h c d h2 )
+    2dup hexhexdir  ( cost hex1 hex2 dir)
+    -rot      
+    (connect)
+;
+
+: path ( hexlist l cost -- )
+    swap ?dup if
+        1- times ( hexn-1 hexn cost)
+            >r 2dup r@ -rot  ( hn-1 hn cost hn-1 hn  |cost)
+            connect drop ( hn-1 |cost)
+            r> ( hn-1 cost)
+        iterate
+    then
+    2drop
+;
+
+
+: outgoing! ( hexes l cost1 -- )
+\    .s cr
+    swap 0 do  ( hexn cost1 )  \ i is direction from 0
+        tuck i opposite dir!
+    loop
+    drop  \ cost1
+;
+
+
+: terrain! ( terrain hex )
+    ! update
+;
+
+\ Set the given hex
+\ Set the entry cost from this hex
+\ to each adjacent hex
+\ set the entry cost from each adjacent hex
+\ to this hex
+: (setland)
+    2dup >hex terrain!
+    swap cost  ( hex# cost )
+    over 2>r ( hex# |cost hex#)
+    neighbours 2r@ incoming!
+    r> neighbours \ .s cr
+    r> outgoing!
+;
+
+: (setsea)
+;
+
+: sethex ( terrain hex# -- )
+    2dup >hex terrain!
+    swap cost  ( hex# cost )
+    over 2>r ( hex# |cost hex#)
+    neighbours 2r@ incoming!
+    r> neighbours \ .s cr
+    r> outgoing!
+;
+
+: paint ( [hexs] l terrain -- )
+    swap times ( [hexes] tophex terrain)
+        tuck swap sethex
+    iterate
+    drop
+;
+
+: (area) ( n brx tlx x - hex1 hex2... hexn n)
+    -rot
+    2dup 2>r
+    1 under+
+    do ( n x |r brx tlx)
+        dup i ( n x x y)
+        swap xy>hex# ( n x hex)
+        rot 1+ ( x hex n2)
+        rot ( hex n2 x)
+    loop
+    drop
+    2r>
+;
+
+: area ( tl br -- hex1 hex2 ... hexn n )
+    0 -rot ( n tl br )
+    hex#>xy rot  ( n brx bry tl )
+    hex#>xy      ( n brx bry tlx tly)
+    rot swap ( n brx tlx bry tly)
+    1 under+
+    do  ( n brx tlx)
+        i (area)
+    loop
+    2drop
+;
+
+\ 908 from
+\ se 10 steps
+
+: from ( hex# -- hex# 1) 1 ;
+
+
+: steps ( list ln dir x -- list2 ln+x)
+    rot >r ( list dir x )
+    dup>r
+    times ( hexes dir)
+        2dup cells steptab +  ( hex dir hex xt^)
+        @ execute ( hex dir hex2|0)
+        dup 0= if 4 throw then
+        swap
+    iterate  ( hexes dir | ln x)
+    drop
+    2r> +
+;
 
 
 previous set-current

@@ -25,3 +25,18 @@
 
 : enums: 0 do  i constant  loop ;
 
+\ a must be ≤ b
+: between? ( n a b -- flag)
+    -rot ( b n a )
+    over > not ( b n f1)
+    -rot
+    < not and
+;
+
+\ unsigned version
+: ubetween? ( n a b -- flag)
+    -rot ( b n a )
+    over u> not ( b n f1)
+    -rot
+    u< not and
+;

@@ -169,24 +169,43 @@ create thisroute  5000 cells allot
 ;
 
 
-
-: hexpath  ( from to -- )
+: reset ( from to -- )
     destination !
     origin !
+
     0 bestroute !
     0 thisroute !
     -1 lowcost !
+;
 
-    origin @
+\ destination must be set
+: route ( from )
     neighbours descending
     times ( [neighbours])
         0 thisroute !
         0 origin @ rot  ( 0 origin nexthex)
         search        
     iterate
-    cr
+;
+
+: hexpath  ( from to -- )
+    reset
+    origin @
+    route
     .best
     ." Cost: " lowcost @ . cr
+;
+
+: cost ( from to -- d )
+    reset origin @ route
+    lowcost @
+;
+
+: trade ( from pop1 to pop2 -- m )
+    rot ( f t p2 p1 )
+    2swap cost 2/ ( p2 p1 d)
+    dup>r
+    */ r> /
 ;
 
 openmap

@@ -1,0 +1,27 @@
+
+: under+ ( a b c -- a+c b)
+    rot + swap ;
+
+: export{ get-order 2 pick set-current drops ;
+
+: }export definitions ;
+
+: global{ forth-wid set-current ;
+
+: }global definitions ;
+
+: dups times dup iterate ;
+
+: diff - abs ;
+
+: ." postpone s" postpone type ; immediate
+
+: ," postpone s" ( caddr cnt)
+    dup ,
+    here over allot
+    swap move
+    align
+;
+
+: enums: 0 do  i constant  loop ;
+

@@ -1,0 +1,49 @@
+wordlist: lists
+lists first
+
+get-current definitions
+
+: .list
+    dup times i 1+ pick . iterate
+;
+
+: list   0  ;
+
+: ll+ ( x1 x2..xn n y1 y2..ym m -- x1..xn+m n+m)
+    dup >r
+    roll r> +
+;
+
+: l+ ( x1..xn n xn+1 -- x1..xn+1 n+1)
+    swap 1+
+;
+
+: ldup dup>r dup times i pick iterate r> ;
+
+: foreach ( list n xt -- )
+    swap times  tuck execute  iterate drop ;
+
+: ldrop  drops ;
+
+: clear depth drops ;
+
+: l, ( x1 x2 ... xn n -- )
+    dup>r times i pick , iterate r> drops ;
+
+: ,X ( x n -- )
+    dup >r dups
+    r> 1+ l,
+;
+
+: join ( [list1] l1 [list2] l2 -- [list3] l3)
+    dup 1+ roll +
+;
+
+export{
+
+: .s depth .list drop  ;
+
+}export
+
+previous
+set-current

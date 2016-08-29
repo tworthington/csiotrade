@@ -1,0 +1,163 @@
+wordlist: mapmaking
+mapmaking first
+
+get-current definitions
+
+2623 constant mapsize
+
+5234 constant lasthex
+
+0 constant n
+1 constant ne
+2 constant se
+3 constant s
+4 constant sw
+5 constant nw
+
+6 constant w
+7 constant e
+
+
+: terrain:
+    create ,
+;
+
+
+1000000000 constant noentry
+\ hex types
+align
+
+200 terrain: pl ," Plains"
+260 terrain: lw ," Lt Woods"
+600 terrain: wd ," Woods"
+800 terrain: jl ," Jungle"
+900 terrain: sp ," Swamp"
+260 terrain: hl ," Hills"
+600 terrain: wh ," Woods+Hills"
+400 terrain: lh ," Lt Wood+Hills"
+700 terrain: sc ," Scrub"
+400 terrain: rh ," Rough"
+700 terrain: dt ," Desert"
+1500 terrain: mt ," Mountains"
+150 terrain: cw ," Coastal water"
+100 terrain: os ," Open sea"
+noentry terrain: xx ," Impassable"
+
+\ minimum land and sea
+create cheapest
+100 , 100 ,
+
+
+create hextab
+pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
+
+
+15 enums:  plains ltwood woods jungle swamp hills woodedhills ltwoodedhills scrub rough desert mountains coast sea impass
+
+\ Each hex is a line in a block file consisting of (cells):
+\ 0 Terrain type
+\ 1 Cost to enter from north
+\ 2 Cost to enter from ne
+\ 3 Cost to enter from se
+\ 4 Cost to enter from s
+\ 5 Cost to enter from sw
+\ 6 Cost to enter from nw
+\ 7 Cost to enter from north by sea
+\ 8 Cost to enter from ne by sea
+\ 9 Cost to enter from se by sea
+\ A Cost to enter from s by sea
+\ B Cost to enter from sw by sea
+\ C Cost to enter from nw by sea
+\ D port?
+
+
+: terrains cells hextab + ;
+
+: name terrains @ cell+ count ;
+
+: cost terrains @ @ ;
+
+: .terrain
+    dup>r @
+    name type ." , cost: " r@ @ cost .
+    ."   From north : " r@ 1 cells+ @ .
+    ."   From ne    : " r@ 2 cells+ @ .
+    ."   From se    : " r@ 3 cells+ @ .
+    ."   From south : " r@ 4 cells+ @ .
+    ."   From sw    : " r@ 5 cells+ @ .
+    ."   From nw    : " r@ 6 cells+ @ . cr
+    ." By sea:" cr
+    ."   From north : " r@ 7  cells+ @ .
+    ."   From ne    : " r@ 8  cells+ @ .
+    ."   From se    : " r@ 9  cells+ @ .
+    ."   From south : " r@ 10 cells+ @ .
+    ."   From sw    : " r@ 11 cells+ @ .
+    ."   From nw    : " r@ 12 cells+ @ . cr
+    rdrop
+;
+
+create template
+
+here
+ltwood ,  ltwood cost 5 ,X
+          impass cost 5 ,X
+0 , 
+
+here swap - constant template-length
+
+160 constant track 
+130 constant road 
+100 constant highroad 
+
+150 constant stream
+300 constant river
+
+
+\ find a hex in the map
+: >hex  ( n -- hex^)
+    dup 16 / 1+ ( n block )
+    block swap 16 mod 64 * +
+;
+
+: defaults ( hexem m -- )
+    times
+        >hex
+        template swap template-length move update
+    iterate
+    flush
+;
+
+: .hex >hex .terrain ;
+
+: >side ( hexaddr side -- addr)
+    1+ 
+    cells +
+;
+
+: clockwise ( side rot -- side2)
+    + 6 mod ;
+
+: opposite 3 clockwise ;
+
+: >hexside ( hex side -- addr)
+    swap >hex
+    swap >side
+;
+
+: >seaside 6 + >hexside ;
+
+\ cost to enter from that side
+: enter£ ( hex side -- cost)
+    >hexside @
+;
+
+\ set cost to enter
+: £!  ( cost hex side -- )
+    >hexside
+    !
+    update
+;
+
+
+
+previous set-current

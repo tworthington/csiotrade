@@ -26,30 +26,36 @@ get-current definitions
 \ hex types
 align
 
-200 terrain: pl ," Plains"
-260 terrain: lw ," Lt Woods"
-600 terrain: wd ," Woods"
-800 terrain: jl ," Jungle"
-900 terrain: sp ," Swamp"
-260 terrain: hl ," Hills"
-600 terrain: wh ," Woods+Hills"
-400 terrain: lh ," Lt Wood+Hills"
-700 terrain: sc ," Scrub"
-400 terrain: rh ," Rough"
-700 terrain: dt ," Desert"
-1500 terrain: mt ," Mountains"
-150 terrain: cw ," Coastal water"
-100 terrain: os ," Open sea"
+100 terrain: pl ," Plains"
+133 terrain: lw ," Lt Woods"
+800 terrain: wd ," Woods"
+1600 terrain: jl ," Jungle"
+1600 terrain: sp ," Swamp"
+133 terrain: hl ," Hills"
+1066 terrain: wh ," Woods+Hills"
+180 terrain: lh ," Lt Wood+Hills"
+400 terrain: sc ," Scrub"
+200 terrain: rh ," Rough"
+600 terrain: dt ," Desert"
+3200 terrain: mt ," Mountains"
+25 terrain: cw ," Coastal water"
+10 terrain: os ," Open sea"
 noentry terrain: xx ," Impassable"
+
+90 constant track 
+80 constant road 
+66 constant highroad 
+
+150 constant stream
+300 constant river
+
 
 \ minimum land and sea
 create cheapest
-100 , 100 ,
-
+66 , 10 ,
 
 create hextab
 pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
-
 
 15 enums:  plains ltwood woods
            jungle swamp hills woodedhills
@@ -107,12 +113,6 @@ ltwood ,  ltwood cost 5 ,X
 
 here swap - constant template-length
 
-160 constant track 
-130 constant road 
-100 constant highroad 
-
-150 constant stream
-300 constant river
 
 
 \ find a hex in the map
@@ -159,7 +159,6 @@ here swap - constant template-length
     !
     update
 ;
-
 
 : row ( hex -- y)
     100 mod ;

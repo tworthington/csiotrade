@@ -487,15 +487,3 @@ openmap
 \ openmap 510 1209 hexpath
 
 \ 101 908 area
-
-\ Local Variables:
-\ forth-local-indent-words:
-\ ((("times") (0 . 2) (0 . 2))
-\ (("iterate") (-2 . 0) (0 . -2))
-\ (("-if") (0 . 2) (0 . 2)))
-\ forth-local-words:
-\ ((("times") compile-only (font-lock-keyword-face . 3))
-\ (("iterate") compile-only (font-lock-keyword-face . 3))
-\ (("-if") compile-only (font-lock-keyword-face . 3))
-\ )
-\ End:

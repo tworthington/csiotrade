@@ -70,4 +70,12 @@ hexes first get-current definitions
     (hexdis)
 ;
 
+
+: rhexdis ( hex1 hex2 -- d)
+    hex#>xy rot hex#>xy ( x2 y2 x1 y1)
+    rot ( x2 x1 y1 y2)
+    diff ( x2 x2 yd)
+    -rot diff +
+;
+
 previous set-current

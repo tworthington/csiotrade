@@ -74,10 +74,7 @@ create thisroute  5000 cells allot
     then
 ;
 
-
-
 : .best
-    origin @ .
     bestroute count  ( cell0 length)
     0 do
         dup i cells+ @ .        
@@ -94,8 +91,8 @@ create thisroute  5000 cells allot
 ;
 
 : countup ( pathcost -- )
-    .route
-    ." Home  @ Cost: " dup . cr
+\    .route
+\    ." Home  @ Cost: " dup . cr
 
     dup lowcost @
     u< if       
@@ -103,12 +100,15 @@ create thisroute  5000 cells allot
         thisroute @ 1+ cells
     
         thisroute bestroute rot move
+        .best
+        ." @ Cost: " lowcost @ .
         ." Taking"
+\        key drop
+        cr
     else
         drop
-        ." Rejecting " 
+\        ." Rejecting " 
     then
-    cr
 ;
 
 : impossible? ( hex cost -- flag)
@@ -125,13 +125,9 @@ create thisroute  5000 cells allot
 \    .route
 ;
 
-: move£ ( hex1 hex2 -- cost)
-    tuck hexhexdir
-    opposite enter£
-;
 
-: report ( thishex cost)
-    thisroute cell+ @ 610 = if
+: report ( thishex cost --)
+    thisroute cell+ @ 0 = if
         .route
         ." From " over .
         ." is " over destination @ hexdis dup .
@@ -144,17 +140,60 @@ create thisroute  5000 cells allot
     drop
 ;
 
-\ add the cost of
+: repeat? ( hex -- flag)
+    thisroute count ( hex addr count)
+    1-
+    cells over + swap
+    do ( hex)
+\        ." repeat? " i  @ . cr
+        dup i @ = if drop unloop -1 exit then
+    [ 1 cells ] literal +loop
+    drop 0
+;
+
+: cache ( hex costtohex -- )
+    lowcost @ diff  ( hex costfromhere)
+    swap
+    >hex >cache ! update
+;
+
+: cache@ ( hex -- costtodestination)
+    >hex >cache @
+;
+
+: (-cache) ( hex# -- )
+    >hex >cache 0 swap ! update
+;
+
+: -cache
+    101 lasthex area times (-cache) iterate
+    flush
+;
+
+: cachekill? ( thishex costsofar -- flag)
+    swap  cache@ ( costsofar todest)
+    dup if
+        + ( totalcosttodest)
+        lowcost @ u>
+    else
+        and
+    then
+;   
+
+\ add the cost of this hex and search the neighbours
 : search ( costsofar lasthex thishex -- )
-\    ." In hex: " dup .  ." from hex: " over .
+\    ." In hex: " dup .  ." from hex: " over . cr
+\    .s cr
     dup addtopath
     tuck move£  ( costsofar thishex stepcost)
     rot + ( thishex costsofar)
-\    .route cr
-\    ." Cost to here: " dup . ." Len: " thisroute @ . cr
-    lowcost @ over u< if 2drop  exit then
-    2dup impossible? if report exit then
+\    ." In hex: " over . 
     over destination @ = if  countup drop exit then ( thishex costsofar )
+    lowcost @ over u< if 2drop  exit then
+    2dup impossible? if 2drop exit then
+    2dup cachekill? if 2drop exit then
+    over repeat? if 2drop exit then
+\    .s depth . cr depth 1- pick 6000 > if bye then
     over 2>r     ( thishex | costsofar thishex)
     neighbours descending ( [neighbours] l | costsofar thishex)
     begin
@@ -165,7 +204,8 @@ create thisroute  5000 cells allot
             recurse  ( [neighbours] l | costsofar thishex)
             -1 thisroute +!
     repeat
-    rdrop rdrop
+\    2r> 2drop
+     r> r> cache
 ;
 
 
@@ -173,6 +213,8 @@ create thisroute  5000 cells allot
     destination !
     origin !
 
+    -cache
+    
     0 bestroute !
     0 thisroute !
     -1 lowcost !
@@ -182,35 +224,59 @@ create thisroute  5000 cells allot
 : route ( from )
     neighbours descending
     times ( [neighbours])
-        0 thisroute !
+        1 thisroute !
+        origin @ thisroute cell+ !
         0 origin @ rot  ( 0 origin nexthex)
         search        
     iterate
 ;
 
+2variable startns
+2variable endns
+
+: allocate ( size -- addr)
+    >r
+    0 -1 2 32 r> 0 6 192 linux
+    dup 0 > if -999 throw then
+;
+
+
+
 : hexpath  ( from to -- )
+    ns startns 2!
     reset
     origin @
     route
+    ns endns 2!
     .best
     ." Cost: " lowcost @ . cr
+    startns 2@
+    endns 2@
+    ." Time: "  ns- .ns
 ;
 
-: cost ( from to -- d )
+: rcost ( from to -- d )
     reset origin @ route
     lowcost @
 ;
 
+: (trade) ( pop1 pop2 pathdist) dup 100 */ ?dup if */ else 2drop 0 then ;
+
 : trade ( from pop1 to pop2 -- m )
     rot ( f t p2 p1 )
-    2swap cost 2/ ( p2 p1 d)
-    dup>r
-    */ r> /
+    2swap rcost ( p2 p1 distance)
+    (trade)
 ;
+    
 
-openmap
+\ openmap
 
-2623 constant csio
+4829 constant ossary  \ 3200
+2623 constant csio    \ 20000
+
+: t ossary csio hexpath ;
+
+
 
 \ openmap 1209 911 hexpath
 \ openmap 510 1209 hexpath

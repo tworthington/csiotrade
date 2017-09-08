@@ -17,8 +17,9 @@ get-current definitions
 6 constant w
 7 constant e
 
-: terrain:
+: terrain: ( <name> <code>)
     create ,
+    char c,
 ;
 
 
@@ -26,21 +27,22 @@ get-current definitions
 \ hex types
 align
 
-100 terrain: pl ," Plains"
-133 terrain: lw ," Lt Woods"
-800 terrain: wd ," Woods"
-1600 terrain: jl ," Jungle"
-1600 terrain: sp ," Swamp"
-133 terrain: hl ," Hills"
-1066 terrain: wh ," Woods+Hills"
-180 terrain: lh ," Lt Wood+Hills"
-400 terrain: sc ," Scrub"
-200 terrain: rh ," Rough"
-600 terrain: dt ," Desert"
-3200 terrain: mt ," Mountains"
-25 terrain: cw ," Coastal water"
-10 terrain: os ," Open sea"
-noentry terrain: xx ," Impassable"
+\ -  w  W  j  "  h  H  8  @  r  _  ^  c  ~  | 
+100  terrain: pl - ," Plains"
+133  terrain: lw w ," Lt Woods"
+800  terrain: wd W ," Woods"
+1600 terrain: jl J ," Jungle"
+1600 terrain: sp " ," Swamp"
+133  terrain: hl h ," Hills"
+1066 terrain: wh H ," Woods+Hills"
+180  terrain: lh 8 ," Lt Wood+Hills"
+400  terrain: sc @ ," Scrub"
+200  terrain: rh r ," Rough"
+600  terrain: dt _ ," Desert"
+3200 terrain: mt ^ ," Mountains"
+25   terrain: cw c ," Coastal water"
+10   terrain: os ~ ," Open sea"
+noentry terrain: xx | ," Impassable"
 
 90 constant track 
 80 constant road 
@@ -55,9 +57,10 @@ create cheapest
 66 , 10 ,
 
 create hextab
+
 pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
 
-15 enums:  plains ltwood woods
+15 enums:  plains ltwoods woods
            jungle swamp hills woodedhills
            ltwoodedhills scrub rough
            desert mountains coast sea impass
@@ -77,14 +80,18 @@ pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
 \ B Cost to enter from sw by sea
 \ C Cost to enter from nw by sea
 \ D port?
-
+\ E cached cost from here to destination
 
 : terrains cells hextab + ;
 
-: name terrains @ cell+ count ;
+: name terrains @ cell+ 1+ count ;
 
 : cost terrains @ @ ;
 
+: code terrains @ cell+ c@ ;
+
+: >cache [ 14 cells ] literal + ;
+\ ------------------------------------------
 : .terrain
     dup>r @
     name type ." , cost: " r@ @ cost .
@@ -107,19 +114,19 @@ pl lw wd jl sp hl wh lh sc rh dt mt cw os xx 15 l,
 create template
 
 here
-ltwood ,  ltwood cost 5 ,X
-          impass cost 5 ,X
+ltwoods ,  ltwoods cost 5 ,X
+           impass cost 5 ,X
 0 , 
 
 here swap - constant template-length
-
-
 
 \ find a hex in the map
 : >hex  ( n -- hex^)
     dup 16 / 1+ ( n block )
     block swap 16 mod 64 * +
 ;
+
+: base£@  >hex @ cost ;
 
 : defaults ( hexem m -- )
     times
@@ -129,7 +136,11 @@ here swap - constant template-length
     flush
 ;
 
-: .hex >hex .terrain ;
+: .hex
+    >hex
+    dup .terrain
+    ." Cached value:" >cache @ .
+;
 
 : >side ( hexaddr side -- addr)
     1+ 
@@ -272,6 +283,23 @@ create steptab
     rdrop
 ;
 
+: +neighbours ( hex# -- hex#1 hex#2...hexnn hex n+1)
+    dup>r
+    neighbours r> l+
+;
+
+: neighbours! ( hex# -- hex#1 hex#2...hexnn n)
+    >r 
+    list
+    r@ hex>nw l+
+    r@ hex>sw l+
+    r@ hex>s  l+
+    r@ hex>se l+
+    r@ hex>ne l+
+    r@ hex>n  l+
+    rdrop
+;
+
 : incoming! ( hexes l cost1 hex# -- )   \ 0 1  2  3 4  5
     rot times ( hexn cost1 hex# )       \ n ne se s sw nw
         rot ?dup if  ( cost1 hex# hexn )
@@ -305,16 +333,39 @@ create steptab
     1+ cells rot >hex + ! update
 ;
 
-: hexhexdir ( hex1 hex2 --- dir)
-    >r
-    neighbours drop
-    r@ = if rdrop 5 drops 0  exit then
-    r@ = if rdrop 4 drops 1 exit then
-    r@ = if rdrop 3 drops 2 exit then
-    r@ = if rdrop 2drop   3 exit then
-    r@ = if rdrop drop    4 exit then
-    r@ = if rdrop         5 exit then
-    rdrop 2 throw
+\ direction from hex1 to hex2
+: oddhexhexdir ( hex1 hex2 - d )
+    \ Noth/south?
+    - dup 1 = if ( d-raw) drop n exit then
+    dup -1 = if drop s exit then
+    \ must be ne or se
+    100 +
+    if  ne else se then
+;
+
+: evenhexhexdir ( hex1 hex2 - d )
+    \ Noth/south?
+    - dup 1 = if ( d-raw) drop n exit then
+    dup -1 = if drop s exit then
+    \ must be ne or se
+    100 +
+    if  se else ne then
+;
+
+\ hex1 is never to the right
+: hexhexdir ( hex1 hex2 -- dir)
+    2dup 
+    > if swap  ( hex1 hex2)
+        over 100 / odd? if oddhexhexdir else evenhexhexdir then
+        opposite
+    else
+        over 100 / odd? if oddhexhexdir else evenhexhexdir then
+    then
+;
+
+: move£ ( hex1 hex2 -- cost)
+    tuck hexhexdir
+    opposite enter£
 ;
 
 : (connect) ( cost dir1 hex1 hex2 )
@@ -329,6 +380,20 @@ create steptab
     2dup hexhexdir  ( cost hex1 hex2 dir)
     -rot      
     (connect)
+;
+
+\ 2-way connect
+: <connect> ( hex1# hex2# -- )
+    2dup base£@ swap base£@ ( hex1 hex2 cost2 cost1)
+    + 2/ -rot
+    connect
+;
+
+: connect+ ( hex1 hex2 penalty -- )
+    >r 2dup 2dup move£
+    r@ + -rot connect
+    swap 2dup move£
+    r> + -rot connect
 ;
 
 : path ( hexlist l cost -- )
@@ -361,25 +426,16 @@ create steptab
 \ to each adjacent hex
 \ set the entry cost from each adjacent hex
 \ to this hex
-: (setland)
+: sethex ( terrain hex# )
     2dup >hex terrain!
-    swap cost  ( hex# cost )
-    over 2>r ( hex# |cost hex#)
-    neighbours 2r@ incoming!
-    r> neighbours \ .s cr
-    r> outgoing!
-;
-
-: (setsea)
-;
-
-: sethex ( terrain hex# -- )
-    2dup >hex terrain!
-    swap cost  ( hex# cost )
-    over 2>r ( hex# |cost hex#)
-    neighbours 2r@ incoming!
-    r> neighbours \ .s cr
-    r> outgoing!
+    tuck 2>r ( hex#| terrain hex#)
+    neighbours
+    begin ( [hexes] l | terrain hex#)
+        ?dup while
+            1- swap ( [hexes] l nexthex )
+            r@ <connect>
+    repeat
+    2r> 2drop
 ;
 
 : paint ( [hexs] l terrain -- )
@@ -434,5 +490,28 @@ create steptab
     2r> +
 ;
 
+: stream ( l1 r1 l2 r2..ln rn 2n -- )
+    2/
+    begin ?dup while 1-
+            -rot stream connect+
+    repeat
+;
+
+
+: .row ( y -- )
+    53 1 do i over (  y x y )
+        xy>hex# >hex @ code emit space
+    loop
+    drop
+;
+
+: .map
+    4 spaces
+    53 1 do i 10 / . loop cr
+    4 spaces
+    53 1 do i 10 mod . loop cr
+    34 1 do i .## space space i .row cr loop
+    cr
+;
 
 previous set-current

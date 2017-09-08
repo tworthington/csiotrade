@@ -1,4 +1,39 @@
+: u.s depth times i pick u. iterate ;
 
+16 constant rowlength
+: .##  s>d <# # # #> type ;
+: .dword s>d <# # # # # # # # # #> type ;
+
+: spaces times space iterate ;
+
+: ['] ' ; immediate
+
+: .row ( addr -- )   dup .dword space
+ dup rowlength + swap 
+ do
+   i 4 mod -if space  then 
+   i c@ .## space   
+  loop ;
+
+\ is n >=l and <=h ?
+: limit? ( l n h ) over <  -rot  >  or not ;
+
+: .asciirow ( addr -- ) 
+  dup rowlength + swap do  
+  33 i c@ 127  limit? if  i c@  else 46 then
+  emit loop ;
+
+: dump ( start rows -- ) base @ >r hex
+  rowlength * over + swap do i .row space i .asciirow cr u.s cr rowlength +loop cr
+  r> base !
+; 
+
+: ? dup 2 dump ;
+
+: 2variable
+    create 0 , 0 ,
+;
+    
 : under+ ( a b c -- a+c b)
     rot + swap ;
 
@@ -39,4 +74,30 @@
     over u> not ( b n f1)
     -rot
     u< not and
+;
+
+
+: ns  here 0 2 265 linux throw here 2@ swap ;
+
+: ns- ( ns1 ns2 -- ns)  ( sec1 ns1 sec2 ns2 -- sec3 ns3)
+    >r ( sec1 ns1 sec2 )
+    rot - ( ns1 sec3)
+    r> rot -
+;
+
+: us>d ( n -- 0 nl)
+    0 swap
+;
+
+: .0r ( n w -- )
+    swap us>d rot <#
+    times
+        #
+    iterate
+    #s
+    #> type ;
+
+: .ns ( sec nanosec -- )
+    swap 0 .0r [char] . emit
+    8 .0r space
 ;

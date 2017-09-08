@@ -7,15 +7,38 @@ get-current definitions
     dup times i 1+ pick . iterate
 ;
 
+\ new list
 : list   0  ;
 
+\ join lists
 : ll+ ( x1 x2..xn n y1 y2..ym m -- x1..xn+m n+m)
     dup >r
     roll r> +
 ;
 
+\ add item to list
 : l+ ( x1..xn n xn+1 -- x1..xn+1 n+1)
     swap 1+
+;
+
+: index ( x1..xn n item -- x1..xn n idx|0)
+    >r
+    dup begin ( xn n n |r: item)
+        dup while
+            dup 1+ pick r@ = if rdrop exit then
+            1-
+    repeat
+    rdrop
+;
+
+\ remove item, if it exists
+: l- ( x1..xn n i -- x1..x? n-1)
+    index ?dup if roll drop 1- then
+;
+
+\ like l- but remove all, not just first
+: l--
+    begin index ?dup while roll drop 1- repeat
 ;
 
 : ldup dup>r dup times i pick iterate r> ;

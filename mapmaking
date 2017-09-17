@@ -17,7 +17,7 @@ get-current definitions
 6 constant w
 7 constant e
 
-: terrain: ( <name> <code>)
+: terrain: ( cost <name> <code>)
     create ,
     char c,
 ;

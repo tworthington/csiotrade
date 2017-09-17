@@ -1,3 +1,47 @@
+wordlist: utils
+
+: $delimit
+  char parse   ( caddr len)
+;
+
+: digression ( <word> <char>file<char> -- )
+  bl word find nip
+  $delimit     ( flag caddr len)
+  rot if  2drop  else included then
+;
+
+: (linerr)
+    dup 0 < if dup abs 1000 < if
+            throw then then
+;
+
+: (allocate) ( size -- addr)
+    >r
+    0 -1 34 3 r> 0 6 192 linux 
+    (linerr)
+;
+
+: allocate ( size -- addr)
+    dup cell+ (allocate) ( size addr)
+    tuck !
+;
+
+: mem  ( size <name> -- addr)
+    create
+    allocate
+    ,
+  does> @ count
+;
+
+: bigrs ( xt size -- ??? )
+    rsp@ swap ( xt oldrsp size )
+    dup allocate + cell-  ( xt oldrsp newrsp)
+    rsp!
+    >r
+    execute
+    r> rsp!
+;
+
 : u.s depth times i pick u. iterate ;
 
 16 constant rowlength
@@ -23,9 +67,11 @@
   33 i c@ 127  limit? if  i c@  else 46 then
   emit loop ;
 
-: dump ( start rows -- ) base @ >r hex
-  rowlength * over + swap do i .row space i .asciirow cr u.s cr rowlength +loop cr
-  r> base !
+: dump ( start rows -- )
+    base @ >r hex
+    rowlength * over + swap do i .row space i .asciirow cr rowlength +loop cr
+    u.s cr
+    r> base !
 ; 
 
 : ? dup 2 dump ;
@@ -44,6 +90,13 @@
 : global{ forth-wid set-current ;
 
 : }global definitions ;
+
+\ [[ squares
+\ blah blah blah
+\ ]]
+
+: [[ ( <wordlist> -- ) ' execute first ; immediate
+: ]] previous ; immediate
 
 : dups times dup iterate ;
 
@@ -76,7 +129,20 @@
     u< not and
 ;
 
+: abort -1 throw ;
 
+: (abort") ( caddr len -- ) type cr -2 throw ;
+
+: abort"
+    postpone s"
+    state @ if 
+        postpone (abort")
+    else
+        (abort")
+    then
+; immediate
+
+\ nanoseconds
 : ns  here 0 2 265 linux throw here 2@ swap ;
 
 : ns- ( ns1 ns2 -- ns)  ( sec1 ns1 sec2 ns2 -- sec3 ns3)
@@ -101,3 +167,6 @@
     swap 0 .0r [char] . emit
     8 .0r space
 ;
+
+1 cells constant 1cell
+2 cells constant 2cell

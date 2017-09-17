@@ -1,0 +1,174 @@
+requires utils
+
+digression l+ "lists"
+digression v! "vectors"
+
+
+wordlist: mapmaking
+mapmaking first definitions
+
+: <file"
+    0 0 [char] " parse open dup 0= throw    
+;    
+
+: fsize ( hdle -- size)
+    pad swap 2 108 linux throw \ fstat
+    pad 20 + @
+;
+
+: mapfile ( hdle -- addr)
+    dup fsize ( hndl size)
+    >r >r
+    0 r> 2 3 r> 0 6 192 linux (linerr) \ mmap2    
+;
+
+\ get the width and height and start addr of data
+: mapfile" ( filename" -- addr)
+    <file" ( hdle)
+    dup mapfile ( hdle addr)
+    swap close
+;
+
+mapfile" testmap.bmp"
+
+constant raw
+
+\ Constants, so extract directly from data
+: field: ( base n <name> -- base2)
+    dup 2 = if over w@ else
+        over @ then
+    constant
+    +
+;
+
+variable casecount
+0 casecount !
+
+raw
+2 field: imgtype
+4 field: filesize
+2 field: res1
+2 field: res2
+4 field: data
+4 field: headsize
+
+export{
+
+4 field: width
+4 field: height
+
+width height * constant mapsquares
+
+}export
+
+2 field: planes
+2 field: bits
+4 field: compression
+4 field: imagesize
+4 field: xres
+4 field: yres
+4 field: #colours
+4 field: importantcolours
+dup constant >colour0
+4 #colours * + constant >origin
+
+: colourdump
+    base @ hex
+    #colours 0 do
+        decimal  i .## ." : "
+        i cells >colour0 + @
+        hex .dword
+        cr
+    loop
+    base !
+;
+
+\ cache sqrts of distances. x2 for one extra bit of precision
+
+width height *  +vector: sqrts
+
+\ This should end with 2/, but we hang on to that bit
+: 2sqrt ( m -- sqrt[m]*2)
+    -1 tuck do  2 +  dup  +loop  ;
+
+: sqrt 2sqrt 2/ ;
+
+: setupsqrt
+    height 0 do
+        width 0 do
+            i i * j j * +
+            2sqrt
+            sqrts
+            j width * i +
+            v!            
+        loop
+    loop
+;
+
+setupsqrt
+
+export{
+
+: distance2 ( x y -- d ) width * + sqrts swap v@ ;
+
+: >xy ( n -- x y ) width /mod  ;
+
+
+: xydist ( x1 y1 x2 y2 -- d )
+    rot - abs ( x2 x1 dy)
+    -rot - abs ( dy dx)
+    swap distance2
+;
+
+: sqdist ( sq1 sq2 -- dx2)
+    >xy rot >xy ( x2 y2 x1 y1)
+    xydist
+;
+
+: .xy >xy swap s>d <# #s #> type [char] , emit . ;
+
+: xy>sq ( x y -- n) width * + ;
+
+: sq@ ( n -- val) >origin + c@ ;
+
+: xy@ ( x y -- val)  xy>sq sq@ ;
+
+: xvalid? ( x -- flag) dup 0< -if  width < else 0 and then ;
+: yvalid? ( y -- flag) dup 0< -if  height < else 0 and then ;
+
+: valid? ( x y -- flag) yvalid? if xvalid? else drop 0 then ;
+
+[[ lists
+
+\ if x y is valid, add it to the list
+: xy?l+ ( <list> x y -- <list2> )
+    2dup valid?
+    if xy>sq l+ else 2drop then
+;
+
+: neighbours ( sq -- sq1 sq2...sqn n)
+    >xy 2>r ( r: x y )
+    list
+    2r@ 1-           xy?l+ \ north
+    2r@ 1+           xy?l+ \ south
+    2r@ 1     under+ xy?l+ \ east
+    2r@ -1    under+ xy?l+ \ west
+    2r@ 1- -1 under+ xy?l+ \ nw
+    2r@ 1- 1  under+ xy?l+ \ ne
+    2r@ 1+ -1 under+ xy?l+ \ sw
+    2r@ 1+ 1  under+ xy?l+ \ se
+    2r> 2drop
+;
+
+]]
+
+variable cheapest
+10 cheapest !
+
+: l.s
+    times .xy cr iterate
+;
+
+}export
+
+previous definitions

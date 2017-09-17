@@ -1,0 +1,78 @@
+\ Vectors are fixed-sized arrays of cells
+\ write with  x vec index v!
+\ read with vec index v@
+\ raw address access with vec index >v
+
+requires utils
+
+wordlist:  vectors
+vectors first
+
+
+definitions
+
+2 enums: private public
+
+\ a vector holds the address of a counted string in memory
+\ when invoked it leaves the address on the stack
+\ count will convert this to addr len
+: vector: ( addr size <name> -- )
+    swap dup
+    create , ! 
+  does> ( index <addr> -- vec )
+    @ 
+;
+
+\ creates the vector from system memory
+\ stores the lengh and returns counted string
+: +vector ( size -- addr size)
+    cells dup cell+ allocate  ( size addr)
+    2dup ! cell+
+    swap ;
+
+: fits? ( vec i -- flag)
+    cells swap @ <
+;
+
+export{
+
+: +vector: ( size <name> -- ) +vector vector: ;
+
+: -vector ( vec -- )
+    count cell+
+    swap cell- 2 91 linux throw ;
+
+: >vi ( vec i -- addr)
+    1+ cells+
+;
+
+: v! ( x vec i -- )
+    2dup fits? if
+        >vi !
+    else
+        abort" Vector write out of bounds"
+    then
+;
+
+: v@ ( vec i -- x)
+    2dup fits? if
+        >vi @
+    else
+        abort" Vector read out of bounds!"
+    then
+;
+
+: copy ( vec1 vec2 -- )
+    2dup = -if
+        swap count rot count ( addr1 len1 addr2 len2)
+        rot 2dup < if abort" Vector won't fit!" then
+        min  ( addr1 addr2 len1|2)
+        move
+    else
+        2drop
+    then
+;
+
+}export
+
+previous definitions

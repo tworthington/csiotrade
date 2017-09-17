@@ -1,0 +1,62 @@
+wordlist: squares
+
+digression sq@ "bmpread"
+
+mapmaking first
+
+squares first
+
+
+definitions
+
+\ ---------------------
+
+5 constant #terrains
+20000000000 constant infinite
+
+5 enums:      impassible opensea   city        coastalsea plains
+
+here
+
+( impassible) infinite , infinite , infinite , infinite , infinite ,
+( opensea   ) infinite , 10       , 50       , 30       , 50000     ,
+( city      ) infinite , 50       , 40       , 50       , 60       ,
+( costalsea ) infinite , 10       , 50       , 10       , 50000     ,
+( plains    ) infinite , 50000     , 60       , 50000     , 80       ,
+
+constant terraincosts
+
+: typerow ( terrain -- addr)
+    #terrains * cells
+    terraincosts +
+;
+
+: typecol ( terrain addr -- cost)
+    swap cells +
+;
+
+: orthogcost ( from to -- cost)
+    sq@ swap sq@
+    typerow ( dest addr)
+    typecol @
+;
+
+: diagcost ( from to -- cost)
+    sq@ swap sq@
+    typerow ( dest addr)
+    typecol @ 14142 10000 */
+;
+
+export{
+
+: move£ ( from to -- cost)
+    2dup - abs  ( from to diff)
+    dup 1 = if drop orthogcost
+    else width = if orthogcost
+        else diagcost
+        then then
+;
+
+}export
+
+previous definitions

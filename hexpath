@@ -1,6 +1,6 @@
 #! /usr/bin/forth
 
-wordlist: hexpath
+wordlist: routeapp
 
 forth only
 definitions
@@ -25,25 +25,27 @@ digression lists "lists"
 
 lists last
 
-digression hexes "hexes"
+\ digression hexes "hexes"
+digression vectors "vectors"
 
 hexes first
 
-digression mapmaking "mapmaking"
+digression mapmaking "bmpread"
 mapmaking first
 
-hexpath first definitions
+routeapp first definitions
 
 variable origin
 variable destination
 variable lowcost
 
-create bestroute  5000 cells allot
-create thisroute  5000 cells allot
+create bestroute  50000 cells allot
+create thisroute  50000 cells allot
 
 : todestination ( hex -- distance)
     destination @ hexdis
 ;
+
 
 \ is hex1 closer to destination than hex2?
 : closer? ( hex1 hex2 -- flag)
@@ -77,7 +79,7 @@ create thisroute  5000 cells allot
 : .best
     bestroute count  ( cell0 length)
     0 do
-        dup i cells+ @ .        
+        dup i cells+ @ .
     loop
     drop
 ;
@@ -234,14 +236,6 @@ create thisroute  5000 cells allot
 2variable startns
 2variable endns
 
-: allocate ( size -- addr)
-    >r
-    0 -1 2 32 r> 0 6 192 linux
-    dup 0 > if -999 throw then
-;
-
-
-
 : hexpath  ( from to -- )
     ns startns 2!
     reset
@@ -276,7 +270,7 @@ create thisroute  5000 cells allot
 
 : t ossary csio hexpath ;
 
-
+\ ' t 1000000 bigrs
 
 \ openmap 1209 911 hexpath
 \ openmap 510 1209 hexpath

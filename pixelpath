@@ -1,0 +1,412 @@
+#! /usr/bin/forth
+
+wordlist: routeapp
+
+forth only
+definitions
+
+: openmap
+    s" hexmap.blk" blockfile
+;
+
+requires utils
+
+digression lists "lists"
+
+lists last
+
+requires squares
+\ digression vectors "vectors"
+
+squares first
+
+digression mapmaking "bmpread"
+mapmaking first
+
+routeapp first definitions
+
+variable origin
+variable destination
+variable lowcost
+
+create thisroute  50000 cells allot
+create routecost  50000 cells allot
+
+: todestination ( sq -- distance)
+    destination @ sqdist
+;
+
+: qdist ( x1 y1 x2 y2 -- distance-squared)
+    rot - dup * ( x1 x2 dy²)
+    -rot - dup *
+    +
+;
+
+\ is sq1 closer to destination than sq2?
+: closer? ( sq1 sq2 -- flag)
+    >xy rot >xy ( x2 y2 x1 y1)
+    destination @ >xy 2dup 2>r
+    qdist ( x2 y2 d1²)
+    -rot 2r> qdist ( d1² d2²)
+    <
+;
+
+: closest  ( list l -- list l )
+    dup 2 < if exit then
+    dup >r
+    1 do ( list best)
+        i pick
+        over closer?
+        if i roll then
+    loop
+    r>
+;
+
+\ order hexes with closest to destination at top
+: descending ( list l -- list2 l2)
+    dup if
+        closest
+        swap
+        >r
+        1-
+        recurse
+        1+ r> swap
+    then
+;
+
+: .route
+    thisroute count  ( cell0 length)
+    0 do
+        dup i cells+ @ .xy        
+    loop
+    drop
+;
+
+: impossible? ( sq cost -- flag)
+    swap todestination
+    cheapest @ * 2/ + ( lowestpossible)
+    lowcost @ u>
+;
+    
+
+: addsq ( sq -- )
+    thisroute
+    count cells+ !
+    1 thisroute +!
+;    
+
+\ thisroute and routecost share lenght
+: addcost ( cost )
+    routecost
+    thisroute @
+    cells+ !
+;
+
+: addtopath ( sq costsofar --)
+    addcost
+    addsq
+;
+
+
+: report ( thishex cost --)
+    thisroute cell+ @ 0 = if
+        .route
+        ." From " over .xy
+        ." is " over todestination  dup .
+        ." which is at least " cheapest @ * 2/ .
+        ." on top of " .
+        ." rejecting." cr
+    else
+        drop
+    then
+    drop
+;
+
+: repeat? ( sq -- flag)
+    thisroute count ( sq addr count)
+    1-
+    cells over + swap
+    do ( sq)
+\        ." repeat? " i  @ . cr
+        dup i @ = if drop unloop -1 exit then
+    [ 1 cells ] literal +loop
+    drop 0
+;
+
+[[ vectors
+
+mapsquares +vector: sqcache
+
+: -cache
+    sqcache count 0 fill
+;
+
+-cache
+
+: cache ( sq costtosq -- ) sqcache rot v! ;
+
+]]
+
+\ the cost of the path found from each square
+\ equals the cost at that sq plus all the ones after
+: calccachedcost
+    thisroute @ times
+        routecost i 1+ cells+ @
+        routecost i cells+ +!
+    iterate 
+;
+
+\ Put those costs into the cache
+: routetocache
+    thisroute count ( addr0 len)
+    0 do
+        @+ swap  ( addri sq)
+        routecost i + @  ( addri sq cost) \ i is in cells
+        cache
+    1cell +loop
+    drop
+;
+
+: countup ( pathcost -- )    
+    dup lowcost @
+    u< if       
+        lowcost !
+        [char] - emit
+        ."  Cost: " lowcost @ .
+        ." ( " thisroute  @ . ." steps )"
+
+        calccachedcost
+        routetocache
+
+        origin @ lowcost @ cache
+    else
+        drop
+        \        ." Rejecting " 
+    then
+;
+
+
+: cache@ ( sq -- costtodestination)
+    sqcache swap v@
+;
+
+: (-cache) ( sq# -- )
+    sqcache swap ( vec i )
+    0 -rot
+    v!
+;
+
+\ Does the cached value rule this path out
+: cachekill? ( thissq costsofar -- flag)
+    swap  cache@ ( costsofar todest)
+    dup if
+        + ( totalcosttodest)
+        lowcost @ u>
+    else
+        and
+    then
+;   
+
+\ add the cost of moving to this sq and search the neighbours
+: search ( costsofar lastsq thissq -- )
+\    ." In sq: " dup .xy  ." from sq: " over .xy cr
+    \    .s cr
+    tuck move£  ( costsofar thissq stepcost)
+    rot + ( thissq costsofar)
+    2dup addtopath
+    over repeat? if 2drop exit then
+\    ." In sq: " over .xy cr
+    over destination @ = if  countup drop exit then ( thissq costsofar )
+    over cache@ ?dup if + countup drop exit then
+    lowcost @ over u< if 2drop  exit then
+    2dup impossible? if 2drop exit then
+\    2dup cachekill? if 2drop exit then
+
+\    .s depth . cr depth 1- pick 6000 > if bye then
+    over 2>r     ( thissq | costsofar thissq)
+    neighbours descending ( [neighbours] l | costsofar thissq)
+    begin
+        ?dup while
+            1- swap
+            2r@ ( [neighbours] l nextSq costsofar thissq | costsofar thissq)
+            rot ( [neighbours] l costsofar thissq nextsq | costsofar thissq)
+            recurse  ( [neighbours] l | costsofar thissq)
+            -1 thisroute +!
+    repeat
+    2r> 2drop
+\     r> r> cache
+;
+
+
+: reset ( to from -- )
+    origin !
+    destination !
+    
+    0 routecost !
+    0 thisroute !
+    -1 lowcost !
+;
+
+\ destination must be set
+: route ( from )
+    neighbours descending
+    times ( [neighbours])
+        1 thisroute !
+        origin @ thisroute cell+ !
+        0 origin @ rot  ( 0 origin nextsq)
+        search        
+    iterate
+;
+
+2variable startns
+2variable endns
+
+: pixelpath  ( to from -- )
+    cr ." Starting from " dup .xy cr
+    reset
+    origin @
+    route
+;
+
+\ optimise later
+: validedges? ( dest disp -- dest disp flag)
+    >r
+    dup >xy ( dest x y |r: disp)
+    dup r@ - 0< -if  2drop r> -1 exit then   \ North edge valid
+    r@ + height < if r> -1 exit       then   \ South edge valid
+    ( dest x|r: disp)
+    dup r@ - 0< -if  drop r> -1 exit then    \ West edge valid
+    r@ + width < if  r> -1 exit      then    \ East edge valid
+    r> 0  \ no valid edges
+;
+
+: donorth ( dest displacement -- )
+    >r
+    dup >xy ( dest x y |r: disp)
+    r@ - dup 0< if \ off north side of map
+        rdrop 2drop drop
+    else ( dest x y2 |r: disp)
+        swap   ( dest y2 x |r: disp)
+        dup r@ + width 1- min 1+ ( dest y2 x xne|r: disp) \ 1+ for do..loop
+        swap r> - 0 max   ( dest y2 xne xnw)
+        do ( dest y2)         \ i will be x2
+            2dup i swap xy>sq ( dest y2 dest origin)
+            pixelpath
+        loop
+        2drop
+    then
+;
+
+: dosouth ( dest displacement -- )
+    >r
+    dup >xy ( dest x y |r: disp)
+    r@ + dup height < -if \ off south side of map
+        rdrop 2drop drop
+    else ( dest x y2 |r: disp)
+        swap   ( dest y2 x |r: disp)
+        dup r@ + width 1- min 1+ ( dest y2 x xne|r: disp) \ 1+ for do..loop
+        swap r> - 0 max   ( dest y2 xne xnw)
+        do ( dest y2)         \ i will be x2
+            2dup i swap xy>sq ( dest y2 dest origin)
+            pixelpath
+        loop
+        2drop
+    then
+;
+
+: dowest ( dest displacement -- )
+    >r
+    dup >xy ( dest x y |r: disp)
+    swap r@ - tuck 0< if \ off west side of map
+        rdrop 2drop drop
+    else ( dest x2 y |r: disp)
+        dup r@ + height 1- min 1+ ( dest x2 y ysw|r: disp) \ 1+ for do..loop
+        swap r> - 0 max   ( dest x2 ysw ynw)
+        do ( dest x2)    \ i will be y2
+            2dup i xy>sq ( dest x2 dest origin)
+            pixelpath
+        loop
+        2drop
+    then
+;
+
+
+: doeast ( dest displacement -- )
+    >r
+    dup >xy ( dest x y |r: disp)
+    swap r@ + tuck width < -if \ off east side of map
+        rdrop 2drop drop
+    else ( dest x2 y |r: disp)
+        dup r@ + height 1- min 1+ ( dest x2 y ysw|r: disp) \ 1+ for do..loop
+        swap r> - 0 max   ( dest x2 ysw ynw)
+        do ( dest x2)    \ i will be y2
+            2dup i xy>sq ( dest x2 dest origin)
+            pixelpath
+        loop
+        2drop
+    then
+;
+
+
+: (fillcache) ( dest)
+    -cache  \ make sure it's empty first
+    0 ( dest disp)
+    begin
+        1+         cr ." Displacement " dup . cr
+        validedges?
+    while ( dest disp)
+            2>r 
+            2r@ donorth
+            2r@ doeast
+            2r@ dosouth
+            2r@ dowest
+            2r>
+    repeat
+    2drop
+;
+    
+: fillcache ( dest )
+    ns startns 2!
+    ['] (fillcache) literal
+    1000000 bigrs
+    ns endns 2!
+    startns 2@
+    endns 2@
+    ." Time: "  ns- .ns
+
+;
+
+
+: rcost ( from to -- d )
+    swap
+    reset origin @ route
+    lowcost @
+;
+
+: (trade) ( pop1 pop2 pathdist) dup 100 */ ?dup if */ else 2drop 0 then ;
+
+: trade ( from pop1 to pop2 -- m )
+    rot ( f t p2 p1 )
+    2swap rcost ( p2 p1 distance)
+    (trade)
+;
+    
+
+: t 66 39 xy>sq fillcache ;
+
+: .from xy>sq cache@ . ;
+
+
+\ openmap
+
+4829 constant ossary  \ 3200
+2623 constant csio    \ 20000
+
+\ : t ossary csio pixelpath ;
+
+\ ' t 1000000 bigrs
+
+\ openmap 1209 911 pixelpath
+\ openmap 510 1209 pixelpath
+
+\ 101 908 area

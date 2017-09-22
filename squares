@@ -14,15 +14,20 @@ definitions
 5 constant #terrains
 20000000000 constant infinite
 
+\ Cost is really risk plus time for state changes (land to sea)
+
 5 enums:      impassible opensea   city        coastalsea plains
 
 here
 
 ( impassible) infinite , infinite , infinite , infinite , infinite ,
-( opensea   ) infinite , 10       , 50       , 30       , 50000     ,
-( city      ) infinite , 50       , 40       , 50       , 60       ,
-( costalsea ) infinite , 10       , 50       , 10       , 50000     ,
-( plains    ) infinite , 50000     , 60       , 50000     , 80       ,
+( opensea   ) infinite , 15       , 50       , 15       , 9000     ,
+( city      ) infinite , 50       , 40       , 50       , 55       ,
+( costalsea ) infinite , 10       , 50       , 10       , 9000     ,
+( plains    ) infinite , 9000     , 55       , 9000     , 60       ,
+
+10 constant cheapest
+
 
 constant terraincosts
 

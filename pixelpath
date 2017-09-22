@@ -82,9 +82,15 @@ create routecost  50000 cells allot
     drop
 ;
 
-: impossible? ( sq cost -- flag)
+: improbable? ( sq cost -- flag)
+    atleasts rot ( cost vec sq)
+    v@
+    + lowcost @ u>
+;
+
+: impossible? ( sq cost -- flag)    
     swap todestination
-    cheapest @ * 2/ + ( lowestpossible)
+    cheapest 2 */ + ( cost lowestpossible)
     lowcost @ u>
 ;
     
@@ -113,7 +119,7 @@ create routecost  50000 cells allot
         .route
         ." From " over .xy
         ." is " over todestination  dup .
-        ." which is at least " cheapest @ * 2/ .
+        ." which is at least " cheapest * 2/ .
         ." on top of " .
         ." rejecting." cr
     else

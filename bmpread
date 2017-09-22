@@ -162,9 +162,6 @@ export{
 
 ]]
 
-variable cheapest
-10 cheapest !
-
 : l.s
     times .xy cr iterate
 ;

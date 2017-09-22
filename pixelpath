@@ -32,6 +32,10 @@ variable lowcost
 create thisroute  50000 cells allot
 create routecost  50000 cells allot
 
+sqrts @ 4 / +vector: atleasts
+
+atleasts count 0 fill
+
 : todestination ( sq -- distance)
     destination @ sqdist
 ;
@@ -173,22 +177,24 @@ mapsquares +vector: sqcache
     drop
 ;
 
-: countup ( pathcost -- )    
+: countup ( pathcost -- )
+    ."  Cost: " lowcost @ .
+    ." ( " thisroute  @ . ." steps )"
+    .route cr
     dup lowcost @
     u< if       
         lowcost !
-        [char] - emit
-        ."  Cost: " lowcost @ .
-        ." ( " thisroute  @ . ." steps )"
 
+        ." Takinging " 
         calccachedcost
         routetocache
 
         origin @ lowcost @ cache
     else
         drop
-        \        ." Rejecting " 
+        ." Rejecting " 
     then
+    cr
 ;
 
 
@@ -209,45 +215,44 @@ mapsquares +vector: sqcache
         + ( totalcosttodest)
         lowcost @ u>
     else
-        and
+        nip
     then
 ;   
 
 \ add the cost of moving to this sq and search the neighbours
 : search ( costsofar lastsq thissq -- )
 \    ." In sq: " dup .xy  ." from sq: " over .xy cr
+\    key drop
     \    .s cr
     tuck move£  ( costsofar thissq stepcost)
-    rot + ( thissq costsofar)
+    rot + ( thissq costohere)
     2dup addtopath
+    over destination @ = if  countup drop exit then ( thissq costohere )
     over repeat? if 2drop exit then
-\    ." In sq: " over .xy cr
-    over destination @ = if  countup drop exit then ( thissq costsofar )
-    over cache@ ?dup if + countup drop exit then
-    lowcost @ over u< if 2drop  exit then
+    over cache@ ?dup if + dup addcost countup drop exit then
+    lowcost @ over u< if 2drop exit then
     2dup impossible? if 2drop exit then
-\    2dup cachekill? if 2drop exit then
-
-\    .s depth . cr depth 1- pick 6000 > if bye then
-    over 2>r     ( thissq | costsofar thissq)
-    neighbours descending ( [neighbours] l | costsofar thissq)
+\    2dup improbable? if 2drop exit then
+\    ." In sq: " over .xy space
+    over 2>r     ( thissq | costohere thissq)
+    neighbours descending ( [neighbours] l | costohere thissq)
     begin
         ?dup while
             1- swap
-            2r@ ( [neighbours] l nextSq costsofar thissq | costsofar thissq)
-            rot ( [neighbours] l costsofar thissq nextsq | costsofar thissq)
-            recurse  ( [neighbours] l | costsofar thissq)
+            2r@      ( [neighbours] l nextSq costohere thissq | costohere thissq)
+            rot      ( [neighbours] l costohere thissq nextsq | costohere thissq)
+            recurse  ( [neighbours] l nextcost| costsofar thissq)
             -1 thisroute +!
-    repeat
+    repeat           ( |r: costsofar thissq)
+    \ Looked at all neighbours now
     2r> 2drop
-\     r> r> cache
 ;
 
 
 : reset ( to from -- )
     origin !
     destination !
-    
+
     0 routecost !
     0 thisroute !
     -1 lowcost !
@@ -260,7 +265,7 @@ mapsquares +vector: sqcache
         1 thisroute !
         origin @ thisroute cell+ !
         0 origin @ rot  ( 0 origin nextsq)
-        search        
+        search
     iterate
 ;
 
@@ -268,9 +273,11 @@ mapsquares +vector: sqcache
 2variable endns
 
 : pixelpath  ( to from -- )
-    cr ." Starting from " dup .xy cr
+    cr ." Starting from " dup .xy ." ( " dup sq@ . ." )" cr
+    ." Going to      " over .xy ." ( " over sq@ . ." ) " 
     reset
-    origin @
+    origin @ dup cache@ ?dup if  lowcost ! then
+    lowcost @ . cr
     route
 ;
 
@@ -279,7 +286,7 @@ mapsquares +vector: sqcache
     >r
     dup >xy ( dest x y |r: disp)
     dup r@ - 0< -if  2drop r> -1 exit then   \ North edge valid
-    r@ + height < if r> -1 exit       then   \ South edge valid
+    r@ + height < if drop r> -1 exit       then   \ South edge valid
     ( dest x|r: disp)
     dup r@ - 0< -if  drop r> -1 exit then    \ West edge valid
     r@ + width < if  r> -1 exit      then    \ East edge valid
@@ -287,6 +294,7 @@ mapsquares +vector: sqcache
 ;
 
 : donorth ( dest displacement -- )
+    ." North" cr
     >r
     dup >xy ( dest x y |r: disp)
     r@ - dup 0< if \ off north side of map
@@ -304,6 +312,7 @@ mapsquares +vector: sqcache
 ;
 
 : dosouth ( dest displacement -- )
+    ." South" cr
     >r
     dup >xy ( dest x y |r: disp)
     r@ + dup height < -if \ off south side of map
@@ -321,6 +330,7 @@ mapsquares +vector: sqcache
 ;
 
 : dowest ( dest displacement -- )
+    ." West" cr
     >r
     dup >xy ( dest x y |r: disp)
     swap r@ - tuck 0< if \ off west side of map
@@ -338,6 +348,7 @@ mapsquares +vector: sqcache
 
 
 : doeast ( dest displacement -- )
+    ." East" cr
     >r
     dup >xy ( dest x y |r: disp)
     swap r@ + tuck width < -if \ off east side of map
@@ -398,9 +409,23 @@ mapsquares +vector: sqcache
 ;
     
 
-: t 66 39 xy>sq fillcache ;
+: t 250 159 xy>sq fillcache ;
+: t 21 32 xy>sq fillcache ;
+: t 21 32 xy>sq 38 30 xy>sq pixelpath ;
 
 : .from xy>sq cache@ . ;
+
+: traceroute ( x y -- )
+    xy>sq
+    begin ( thissq)
+        dup destination @ <> while
+            dup .xy
+            neighbours descending ( [neighbours] l )
+            dup -if abort" No neighbours!" then
+            1- nips ( nextsq)
+    repeat
+    drop
+;
 
 
 \ openmap

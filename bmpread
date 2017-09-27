@@ -69,8 +69,9 @@ width height * constant mapsquares
 4 field: yres
 4 field: #colours
 4 field: importantcolours
-dup constant >colour0
-4 #colours * + constant >origin
+constant >colour0
+
+raw data + constant >origin
 
 : colourdump
     base @ hex

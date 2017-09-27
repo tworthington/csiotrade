@@ -1,5 +1,5 @@
 \ Vectors are fixed-sized arrays of cells
-\ write with  x vec index v!
+\ write with  value vector index v!
 \ read with vec index v@
 \ raw address access with vec index >v
 

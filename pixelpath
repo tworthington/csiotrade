@@ -29,29 +29,29 @@ variable lowcost
 
 create thisroute  50000 cells allot
 create routecost  50000 cells allot
+create routeflags 50000 cells allot
 
-sqrts @ 4 / +vector: atleasts
+
 sqrts @ 4 / +vector: bestmove
-
-atleasts count 0 fill
 
 [[ vectors
 
 mapsquares +vector: sqcache
 
 : -cache
-    sqcache count 0 fill
+    sqcache count  0 fill
 ;
 
 -cache
 
-: cache! ( sq costtosq -- )
-  dup infinite u< -if 2drop else
-  sqcache rot v! then ;
-
 : cache@ ( sq -- costtodestination)
     sqcache swap v@
 ;
+
+: cache! ( sq costtosq -- )
+        sqcache rot v!
+;
+
 
 : updates ( from cost to -- cost )
     >r 2dup cache!
@@ -62,15 +62,22 @@ mapsquares +vector: sqcache
 ]]
 
 
-: todestination ( sq -- distance)
-    destination @ sqdist
-;
-
 : qdist ( x1 y1 x2 y2 -- distance-squared)
     rot - dup * ( x1 x2 dy²)
     -rot - dup *
     +
 ;
+
+: todestination ( sq -- distance)
+    >xy 
+    destination @ >xy qdist
+;
+
+: (priority) ( to from -- pri)
+    over move£
+    swap todestination *
+;
+
 
 \ is sq1 closer to destination than sq2?
 : closer? ( sq1 sq2 -- flag)
@@ -81,24 +88,18 @@ mapsquares +vector: sqcache
     <
 ;
 
-: cheaper? ( sq1 sq2 --flag)
-    sqcache swap v@ sqcache rot v@ >
-;
 
-: cheapest  ( list l -- list l )
-    dup 2 < if exit then
-    dup >r
-    1 do ( list best)
-        i pick
-        over cheaper?
-        if i roll then
-    loop
-    r>
+\ is sq1 better than sq2?
+: lower? ( sq1 sq2 origin -- flag)
+    tuck ( sq1 origin sq2 origin )
+    (priority) -rot (priority)  ( p2 p1)
+    >
 ;
+    
 
 : closest  ( list l -- list l )
     dup 2 < if exit then
-    dup >r
+    dup >r \ for returning proper list
     1 do ( list best)
         i pick
         over closer?
@@ -107,8 +108,19 @@ mapsquares +vector: sqcache
     r>
 ;
 
-\ order hexes with closest to destination at top
-: descending ( list l -- list2 l2)
+: lowest ( list l origin -- list2 l)
+    over 2 < if drop exit then
+    over >r  \ for returning proper list
+    >r \ origin
+    1 do
+        i pick over r@ lower?
+        if i roll then
+    loop
+    rdrop r>
+;
+
+\ order squares with closest to destination at top
+: descending ( list l -- list2 l)
     dup if
         closest
         swap
@@ -119,6 +131,22 @@ mapsquares +vector: sqcache
     then
 ;
 
+\ Order by ascending distance*cost
+: priority ( list l origin -- list2 l2)
+    >r
+    dup if
+        r@
+        lowest
+        swap
+        >r
+        1-
+        r@ recurse
+        1+ r> swap
+    then
+    rdrop
+;
+
+
 : .route
     thisroute count  ( cell0 length)
     0 do
@@ -128,8 +156,21 @@ mapsquares +vector: sqcache
 ;
 
 : pathcost ( -- costOfPath)
-    routecost thisroute @ cells+ @
+    thisroute @ dup if cells
+    routecost + @ then
 ;
+
+: recflag ( flag -- )
+    routeflags thisroute @ cells+
+    dup @ rot or swap ! ;
+
+: flag@
+    routeflags thisroute @ cells+ @ ;
+
+: flag@ -1 ;
+
+: -flag
+    0     routeflags thisroute @ cells+ ! ;
 
 : overrun? ( -- flag) pathcost lowcost @ u> ;
 
@@ -169,69 +210,92 @@ mapsquares +vector: sqcache
         1-
         cells over + swap
         do ( sq)
-\        ." repeat? " i  @ . cr
-          dup i @ = if drop unloop -1 exit then
-          [ 1 cells ] literal +loop
+            \        ." repeat? " i  @ . cr
+            dup i @ = if drop unloop -1 exit then
+        [ 1 cells ] literal +loop
+        drop
+    else
+        2drop
     then
-    drop 0
+    0
 ;
 
-: countup ( cachedvalue -- cachedvalue )
-  cr
-  ." Cost: " pathcost .
-  ." ( " thisroute  @ . ." steps ) "
-  .route cr
+: countup ( costtohere costfromhere -- )
+    cr
+    +
+    ." Cost: " dup .
 
-  pathcost
-  lowcost @
-  u< if
-    pathcost lowcost !
+    dup lowcost @
+    u< if
+        lowcost !
+        ." Taking" cr
+    else
+        drop
+        ." Rejecting "
+    then
+    ." Route: " .route destination @ .xy cr
+\    ?break
 
-    ." Taking"
-    \ key drop
-\        key 27 = if abort" Break" then
-  else
-    ." Rejecting "
-  then
-  [char] . emit
+    [char] . emit
 ;
 
+\ destination is global
+\ cost via square is:
+\ thissq=destination -> cost to move
+\ else -> cost to move to neighbour with lowest cost
+: search ( costsofar thissq -- costfromhere flag)
+    dup destination @ = if [char] D emit drop 0 countup 0 cr -1 exit then
+    dup cache@ ?dup if  [char] C emit dup . nip tuck  countup cr -1 exit then
+    dup repeat? if  [char] R emit 2drop infinite cr 0 exit  then
+    over lowcost @ u> if  [char] O emit .route drop . infinite cr 0 exit then
+    cr ." In " dup .xy over . cr
+    dup addsq -flag
+    infinite >r  ( tohere thissq| best)
+    swap >r dup>r ( thissq |best tohere thissq )
+    neighbours descending  ( N1...Nx x |best tohere thissq)
+    begin ( N1...Nx x |best tohere thissq)
+        ?dup while 1-
+            r@ ." Still in " .xy ." looking at "
+            swap ( x-1 nextsq)  dup .xy
+            2r@ drop .
+            cr
+            r@ over move£  ( x-1 nextsq basecost)
+            2r@ drop       ( x-1 nextsq basecost tohere)
+            over +         ( x-1 nextsq basecost tonext)
+            rot            ( x-1 basecost tonext nextsq)
+            dup>r          ( x-1 basecost tonext nextsq | best tohere thissq nextsq)
+            recurse        ( x-1 basecost fromnext flag)
+            recflag
+            dup infinite = if 2drop rdrop
+                else
+                    +      ( x-1 fromhere)
+                    r> swap   ( x-1 nextsq fromhere)
+                    2r> rot   ( x-1 nextsq tohere thissq fromhere)
+                    r>        ( x-1 nextsq tohere thissq fromhere best)
+                    2dup u< -if >r drop 2>r drop
+                    else
+                        drop >r tuck 2>r   ( x-1 nextsq thissq  )
+                        ." Best move: " dup .xy ." -> " over .xy cr
+                        u.s
+                        bestmove swap v!
+                    then
+                then
 
-\ Find cost of best move from here.
-\ Cost=cost to nextSq+cost from nextSq
-
-: search ( previoussq thissq -- costFromHere)
-    \    key drop
-    tuck
-    addtopath ( thissq)
-    dup repeat? if  drop infinite exit then
-    dup destination @ = if drop 0 countup exit then ( thissq  )
-    dup cache@ ?dup if nip countup exit then
-    overrun? if drop infinite exit then
-    dup>r infinite >r     ( thissq | thissq best)
-    neighbours descending ( [neighbours] l | thissq  best )
-    \ find new best
-    begin
-        ?dup while
-            1- swap  ( [neighbours] l-1 nextsq | thissq best )
-            dup 2r@ drop move£ ( nxsq costtonx | thissq best )
-            over 2r@ drop swap ( nxsq costtonx thissq nxsq)
-            recurse  ( [neighbours] l nxsq costtonext costfromNext| thissq best )
-            -1 thisroute +!
-            +
-            r@   ( nx fromHere best | thissq best)
-            2dup u< -if 2drop drop
-            else
-                drop rdrop   ( nx newBest | thissq)
-                swap bestmove r@ v!
-                >r             ( | thissq best)
-            then
-    repeat           ( |r: thissq best )
-\ Looked at all neighbours now
-2r> tuck cache!
-\    [char] x emit depth .
+    repeat
+    2r> r@
+    over .xy ." Done" cr
+    ( tohere thisq best |best)
+    infinite = flag@ 0= or
+    if 2drop r>
+    else
+        r@
+        over .xy ." Best cost cached:" dup . cr
+        cache!
+        drop r>
+    then
+    flag@
+    -1 thisroute +!
 ;
-
 
 : reset ( to from -- )
     origin !
@@ -239,7 +303,7 @@ mapsquares +vector: sqcache
     
     0 routecost !
     0 thisroute !
-    -1 lowcost !
+    infinite lowcost !
 ;
 
 2variable startns
@@ -249,7 +313,7 @@ mapsquares +vector: sqcache
     cr ." Starting from " dup .xy ." ( " dup sq@ . ." )" cr
     ." Going to      " over .xy ." ( " over sq@ . ." ) " cr
     reset
-    origin @ dup search countup .
+    0 origin @ search .
 ;
 
 \ optimise later
@@ -341,7 +405,7 @@ mapsquares +vector: sqcache
     0 ( dest disp)
     begin
         1+         cr ." Displacement " dup . cr
-        validedges?
+        validedges?  over  24 < and
     while ( dest disp)
             2>r 
             2r@ donorth
@@ -356,7 +420,7 @@ mapsquares +vector: sqcache
 : fillcache ( dest )
     ns startns 2!
     ['] (fillcache) literal
-    1000000 bigrs
+    10000000 bigrs
     ns endns 2!
     startns 2@
     endns 2@
@@ -369,14 +433,15 @@ mapsquares +vector: sqcache
 
 : trade ( from pop1 to pop2 -- m )
     rot ( f t p2 p1 )
-    2swap rcost ( p2 p1 distance)
+\    2swap rcost ( p2 p1 distance)
     (trade)
 ;
     
 
 : t 21 32 xy>sq 56 37 xy>sq pixelpath ;
-: t 56 37 xy>sq 54 5  xy>sq pixelpath ;
-: t 21 32 xy>sq dup destination ! fillcache ;
+ : t 21 32 xy>sq 52 35  xy>sq pixelpath ;
+\ : t 21 32 xy>sq 19 32  xy>sq pixelpath ;
+ : t2 21 32 xy>sq dup destination ! fillcache ;
 
 : .from xy>sq cache@ . ;
 : best? bestmove swap v@ dup .xy ;
@@ -407,7 +472,10 @@ mapsquares +vector: sqcache
 \ 101 908 area
 
 : .map
-  height times
-  width times
-  j i xy@ .
-  iterate cr iterate ;
+  height 0 do
+      width 0 do
+          i j xy@ . 
+      loop
+      cr
+  loop
+;

@@ -142,6 +142,10 @@ wordlist: utils
     then
 ; immediate
 
+: ?break
+    key 27 = if abort" Break" then
+;   
+
 \ nanoseconds
 : ns  here 0 2 265 linux throw here 2@ swap ;
 

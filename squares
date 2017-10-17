@@ -11,26 +11,25 @@ definitions
 
 \ ---------------------
 
-6  constant #terrains
+7  constant #terrains
 20000000 constant infinite
 
 \ Cost is really risk plus time for state changes (land to sea)
 
-#terrains enums: impassible opensea   city        coastalsea plains     woods
+#terrains enums: impassible opensea   city        coastalsea plains     woods      roads
 
 here
 
-( impassible)    infinite , infinite , infinite , infinite , infinite , infinite ,
-( opensea   )    infinite , 15       , 60       , 15       , 6000      , 6000      ,
-( city      )    infinite , 60       , 40       , 60       , 60       , 60       ,
-( costalsea )    infinite , 10       , 60       , 10       , 6000      , 6000      ,
-( plains    )    infinite , 6000      , 60       , 6000      , 60       , 120       ,
-( woods     )    infinite , 6000      , 60       , 6000      , 120       , 120      ,
-
-10 constant cheapest
-
+( impassible)    infinite , infinite , infinite , infinite , infinite , infinite , infinite  ,
+( opensea   )    infinite , 15       , 50       , 15       , 2000     , 2000     , 2000 ,
+( city      )    infinite , 200      , 16       , 200      , 21       , 30       , 16 ,
+( costalsea )    infinite , 10       , 60       , 10       , 2000     , 2000     , 2000 ,
+( plains    )    infinite , 2000     , 21       , 2000     , 25       , 40       , 18 ,
+( woods     )    infinite , 2000     , 60       , 2000     , 35       , 50       , 38 ,
+( roads     )    infinite , 2000     , 16       , 2000     , 18       , 38       , 16 ,
 
 constant terraincosts
+10 constant cheapest
 
 : typerow ( terrain -- addr)
     #terrains * cells

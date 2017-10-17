@@ -31,6 +31,14 @@ get-current definitions
     rdrop
 ;
 
+: lpop ( xn n -- xn-1 n-1 xn)
+    dup if
+        1- swap
+    else
+        abort" lpop on empty list"
+    then
+;
+
 \ remove item, if it exists
 : l- ( x1..xn n i -- x1..x? n-1)
     index ?dup if roll drop 1- then

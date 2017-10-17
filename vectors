@@ -34,6 +34,20 @@ definitions
     cells swap @ <
 ;
 
+: clear ( vec)
+  count 0 fill ;
+
+: maximum ( vec )
+  count ?dup if 2/ 2/ ( addr len)
+    over @ swap 0 do  ( addr best )
+      swap @+     ( best next addr2)
+      -rot max    ( addr best)
+    loop
+    swap
+  then
+  drop
+;
+
 export{
 
 : +vector: ( size <name> -- ) +vector vector: ;

@@ -42,6 +42,10 @@ wordlist: utils
     r> rsp!
 ;
 
+: (2constant) ( addr -- a b ) 2@ ;
+
+: 2constant ( a b <name> -- ) create , , does> (2constant) ;
+
 : u.s depth times i pick u. iterate ;
 
 16 constant rowlength

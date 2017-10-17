@@ -1,0 +1,122 @@
+requires utils
+
+digression lists "lists"
+
+wordlist: pqueues
+
+pqueues first definitions
+
+\ Plist has two lists: priorities and items
+
+0 cells constant (>size)
+1 cells constant (>items)
+2 cells constant (>priorities)
+
+: >items  (>items) + @ ;
+: >priorities (>priorities) + @ ;
+: >size  (>size) + ;
+
+: clear ( pqueue -- ) 0 swap >size ! ;
+global{
+
+: pqueue: ( size <name> -- )
+    create
+    here 0 , 0 , 0 ,  ( size header^)
+    over cells cell+ allocate  ( size header^ items^)
+    over (>items) + !   ( size header^)
+    swap cells allocate over (>priorities) + !  ( header^)
+    clear
+;
+
+\ Adding an item ( item and priority) always keeps the list
+\ sorted
+
+: size ( pqueue -- size) >size @ ;
+: empty? ( pqueue -- flg ) size 0= ;
+
+: push ( item priority pqueue -- )
+    dup size cells ( item priority pqueue offset)
+    >r tuck ( item pqueue priority pqueue |offset)
+    1 over >size +!
+    >priorities r@ + !
+    >items r> + !
+;
+
+: pop ( pqueue -- maxitem maxpriority)
+    dup empty? if abort" Trying to pop empty pqueue" then
+    -1 over +!
+    dup size cells >r  ( pqueue |offset)
+    dup >items r@ + @     ( pqueue maxitem |offset)
+    swap >priorities r> + @
+;
+
+\ The priority of item i
+: priority# ( i pqueue -- priorityi) >priorities swap cells+ @ ;
+: item# ( i pqueue -- priorityi) >items swap cells+ @ ;
+
+}global
+
+: maxindex ( pqueue -- i) size 1- ;
+
+: +gaps ( index pqueue --)
+    over >r >r cells dup ( offset offset| index pqueue)
+    r@ >priorities + dup cell+ ( offset addr0 addr1| index pqueue)
+    2r@ size swap - cells ( offset addr0 addr1 len |index pqueue)
+    cmove>
+    r@ >items + dup cell+ ( addr0 addr1| index pqueue)
+    2r> size swap - cells ( addr0 addr1 len )
+    cmove>
+;
+
+: doinsert ( item priority index pqueue -- )
+    2dup >r >r
+    +gaps ( item priority | pqueue index )
+    2r@  cells swap >priorities + ( item val addr)
+    !
+    2r> cells swap >items +
+    !
+;
+
+\ index of first item greater than priority
+: <index ( priority pqueue -- index)
+    dup size times  ( priority pqueue)
+        i over priority#   ( priority pqueue vali)
+        2 pick > if 2drop i unloop exit then
+    iterate
+    2drop -1
+;
+
+: find-place ( priority pqueue -- index) <index 1+ ;
+
+\ sorted insert with low score at top priority
+: -sinsert ( item priority pqueue -- )
+    2dup <index  over maxindex ( item priority pqueue index maxindex)
+    over = if drop push else
+        ( item priority pqueue index)
+        1+
+        swap dup>r doinsert 1 r> >size +!
+    then
+
+;
+
+global{
+
+: -val ( item priority pqueue -- )
+  dup size if  -sinsert
+           else push
+           then
+;
+
+: best ( pqueue -- bestpriority)
+    dup empty? if abort" Maxval on empty pqueue" then
+    dup maxindex swap priority#
+;
+
+
+
+
+}global
+
+
+
+previous definitions

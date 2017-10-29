@@ -20,13 +20,13 @@ definitions
 
 here
 
-( impassible)    infinite , infinite , infinite , infinite , infinite , infinite , infinite  ,
+( impassible)    infinite , infinite , infinite , infinite , infinite , infinite , infinite ,
 ( opensea   )    infinite , 15       , 50       , 15       , 2000     , 2000     , 2000 ,
 ( city      )    infinite , 200      , 16       , 200      , 21       , 30       , 16 ,
 ( costalsea )    infinite , 10       , 60       , 10       , 2000     , 2000     , 2000 ,
 ( plains    )    infinite , 2000     , 21       , 2000     , 25       , 40       , 18 ,
 ( woods     )    infinite , 2000     , 60       , 2000     , 35       , 50       , 38 ,
-( roads     )    infinite , 2000     , 16       , 2000     , 18       , 38       , 16 ,
+( roads     )    infinite , 2000     , 16       , 2000     , 48       , 38       , 16 ,
 
 constant terraincosts
 10 constant cheapest

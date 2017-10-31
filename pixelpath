@@ -28,6 +28,7 @@ mapmaking first
 routeapp first definitions
 
 variable destination
+variable origin
 
 \ Worst case scenario: all squares have 8 possible approaches
 mapsquares cells 8 * pqueue: frontier
@@ -138,38 +139,68 @@ sqrts @ 4 / +vector: bestmove
 \ cost via square is:
 \ thissq=destination -> cost to move
 \ else -> cost to move to neighbour with lowest cost
-: search (  -- )
+: search1 (  -- )
   begin
     frontier empty? not while
-    frontier pop drop ( current)
-    dup>r neighbours descending ( list l |  current)
-    begin
-      ?dup
-    while
-      1-
-      swap   ( list-1 l-1 sq_l |current)
-      r@ over move£  ( list l next cost)
-      costsofar r@ v@ +  ( list l next tcost)
-      over costsofar swap v@  ( list l next tcost csf)
-      dup 0=  >r ( list l next tcost csf  |current flg)
-      over u> r> or if
-        r@  ( list l next tcost current)
-        -rot
-        update
-      else
-        2drop
-      then
-    repeat
-    rdrop
+      frontier pop drop ( current)
+      origin @ over = if drop exit then
+      dup>r neighbours descending  ( list l |  current)
+      begin
+        ?dup
+      while
+          1-
+          swap   ( list-1 l-1 sq_l |current)
+          r@ over move£  ( list l next cost | current)
+          costsofar r@ v@ +  ( list l next tcost | current)
+          over costsofar swap v@  ( list l next tcost csf)
+          dup 0=  >r ( list l next tcost csf  |current flg)
+          over
+          u> r> or if
+            r@  ( list l next tcost current)
+            -rot
+            update
+          else
+            2drop
+          then
+      repeat
+      rdrop
+  repeat
+;
+
+: searchAll (  -- )
+  begin
+    frontier empty? not while
+      frontier pop drop ( current)
+      dup>r neighbours descending  ( list l |  current)
+      begin
+        ?dup
+      while
+          1-
+          swap   ( list-1 l-1 sq_l |current)
+          r@ over move£  ( list l next cost | current)
+          costsofar r@ v@ +  ( list l next tcost | current)
+          over costsofar swap v@  ( list l next tcost csf)
+          dup 0=  >r ( list l next tcost csf  |current flg)
+          over
+          u> r> or if
+            r@  ( list l next tcost current)
+            -rot
+            update
+          else
+            2drop
+          then
+      repeat
+      rdrop
   repeat
 ;
 
 ]]
 
-: reset ( to -- )
+: reset ( from to -- )
   [[ pqueues
   frontier clear ]]
   destination !
+  origin !  
   destination @ 0 frontier -val
   [[ vectors
   camefrom clear
@@ -179,18 +210,26 @@ sqrts @ 4 / +vector: bestmove
 2variable startns
 2variable endns
 
-: pixelpath  ( to -- )
+: pixelpath1  ( from to -- )
   ns startns 2!
-  ." Paths to to      " over .xy ." ( " over sq@ . ." ) " cr
   reset
-  search
+  search1
   ns endns 2!
   startns 2@
   endns 2@
   ." Time: "  ns- .ns cr
 ;
 
-: setup ( x y -- ) xy>sq pixelpath ;
+: pixelpathAll  ( to -- )
+  ns startns 2!
+  0 swap reset
+  searchAll
+  ns endns 2!
+  startns 2@
+  endns 2@
+  ." Time: "  ns- .ns cr
+;
+
 
 : (trade) ( pop1 pop2 pathdist) dup 1000 */ ?dup if */ else 2drop 0 then ;
 : (trade) ( pop1 pop2 pathdist) */ ;
@@ -201,7 +240,7 @@ sqrts @ 4 / +vector: bestmove
     (trade)
 ;
 
-: traderoute ( fromx fromy pop1 pop2 -- )
+: traderoute ( fromx fromy pop1 pop2 -- vol )
   2over xy>sq >r
   trade r> ( vol origin)
   over dup . cr if
@@ -211,15 +250,13 @@ sqrts @ 4 / +vector: bestmove
       camefrom swap v@  ( sq | vol)
       dup destination @ =
     until
-    tradevol swap r> -rot >vi +!
+    tradevol swap r@ -rot >vi +!
+    r>
   else
     2drop
+    0
   then
 ;
-
-: t  56 37 xy>sq pixelpath ;
-: t 52 35  xy>sq pixelpath ;
-: t 21 32 xy>sq pixelpath ;
 
 variable (cities)
 : cities ( <name> )  0 (cities) !  create here cell+ , does> @ ;
@@ -227,11 +264,12 @@ variable (cities)
 \ sq pop name namelen
 : city ( x y pop caddr len)
   2>r -rot xy>sq , , 2r> swap , ,
+  0 , \ trade
   1 (cities) +! ;
 
 : #cities (cities) @ ;
 
-: >city ( i base -- addr) swap 4 cells * + ;
+: >city ( i base -- addr) swap 5 cells * + ;
 
 : .city ( i base )
   >city
@@ -246,17 +284,20 @@ variable (cities)
 : >cityname
   >city
   2 cells+ @+ @ ;
+: >trade
+  >city 4 cells + ;
 
 \ x y pop name
 cities map1cities
-57 169  16000 s" Westport" city
+57 169  10000 s" Westport" city
 84 571    150 s" South Farm" city
 136 697 20000 s" Big City" city
 147 116   150 s" North Farm" city
+147 421    20 s" Portaferry" city
 192  40   120 s" Northport" city
-193  40    30 s" Smallville" city
 312 217  1700 s" Forest Town" city
 387 577  2900 s" Iggs" city
+433 444   600 s" Three Roads Part" city
 531 472   750 s" Marshgate" city
 701 371   100 s" Spitville"  city
 743 220  1100 s" Monkstown" city
@@ -266,26 +307,40 @@ cities map1cities
 
 : named: 0 do i map1cities 2constant loop ;
 
-#cities named: westport southFarm bigCity northFarm northport
-smallville forestTown iggs marshgate spitville
+#cities named: westport southFarm bigCity northFarm portaferry
+northport forestTown iggs 3roadspart marshgate spitville
 monkstown northShields faropolis southShields
 
 \ trade from city
 : citytrade ;
 
+: tradereport
+  0 ( tot)
+  #cities times
+    i map1cities >cityname type ."  Trade: " tab
+    i map1cities >trade @ 
+    dup . ." (" dup i map1cities >pop @ / . ."  per person)" tab ." via: "
+    tradevol i map1cities >sq @ v@ dup . ." ("  i map1cities >pop @ / . ."  per person)"
+    cr
+    + 
+  iterate ." Total trade: " .
+;
+
 : alltrade
   #cities times
-  i map1cities >sq @ pixelpath
-  i times
-  i j <> if
-    i map1cities >sq @ >xy
-    i map1cities >pop @ j map1cities >pop @
-    ." From " i map1cities >cityname type space
-    ." to " j map1cities >cityname type space
-    traderoute
-  then
-  iterate iterate
-  0 #cities times tradevol i map1cities >sq @ v@ + iterate ." Total trade: " .
+    i if
+      i map1cities >sq @ pixelpathAll
+      i times
+        i j <> if
+          i map1cities >sq @ >xy
+          i map1cities >pop @ j map1cities >pop @
+          ." From " i map1cities >cityname type tab
+          ." to " j map1cities >cityname type tab
+          traderoute dup i map1cities >trade +! j map1cities >trade +!
+        then
+      iterate
+    then
+  iterate
 ;
 
 : t alltrade ;
@@ -354,16 +409,21 @@ variable scale
 
 : domain ( scale -- )
     mapsquares 0 do
-        costsofar i v@ over /
-        255 swap - 0 max emit
+      costsofar i v@ dup if
+      over / 
+        255 swap - 1 max
+      then
+       emit
     loop
     drop
 ;
 
 : domainmap ( city)
-    >sq @ pixelpath
+    >sq @ pixelpathAll
     s" domain.pgm" open>
     startfile
-    30 domain
+    40 domain
     close
 ;
+
+: t northShields domainmap ;

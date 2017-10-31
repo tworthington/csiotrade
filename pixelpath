@@ -114,9 +114,21 @@ sqrts @ 4 / +vector: bestmove
   drop
 ;
 
+: heuristic ( next -- penalty)
+  >xy destination @ >xy ( x1 y1 x2 y2)
+  rot - abs ( x2 x1 dy)
+    -rot - abs ( dy dx)
+  dup * swap dup * +
+  2sqrt 10 2 */
+;
+
+: heuristicz 0 and ;
+
 : update ( from next cost)
   2dup costsofar rot v!
-  2dup frontier -val
+  2dup ( from next cost next cost)
+  over heuristic +
+  frontier -val
   drop
   camefrom swap v!
 ;

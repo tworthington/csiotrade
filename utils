@@ -54,6 +54,8 @@ wordlist: utils
 
 : spaces times space iterate ;
 
+: tab 9 emit ;
+
 : ['] ' ; immediate
 
 : .row ( addr -- )   dup .dword space

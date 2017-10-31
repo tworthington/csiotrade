@@ -5,10 +5,6 @@ wordlist: routeapp
 forth only
 definitions
 
-: openmap
-    s" hexmap.blk" blockfile
-;
-
 requires utils
 
 digression lists "lists"

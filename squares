@@ -11,46 +11,216 @@ definitions
 
 \ ---------------------
 
-7  constant #terrains
+16 constant #terrains
 20000000 constant infinite
 
 \ Cost is really risk plus time for state changes (land to sea)
 
-#terrains enums: impassible opensea   city        coastalsea plains     woods      roads
+#terrains enums:
+impassible
+opensea
+city
+coastalsea
+plains
+woods
+roads
+ltwoods
+hills
+woodedhills
+mountains
+swamp
+desert
+scrub
+rough
+river
 
-here
+\ a table n x n in size
+: xtable ( n <name> -- )
+  create dup ,
+  dup * cells allot
+;
 
-( impassible)    infinite , infinite , infinite , infinite , infinite , infinite , infinite ,
-( opensea   )    infinite , 15       , 50       , 15       , 2000     , 2000     , 2000 ,
-( city      )    infinite , 200      , 16       , 200      , 21       , 30       , 16 ,
-( costalsea )    infinite , 10       , 60       , 10       , 2000     , 2000     , 2000 ,
-( plains    )    infinite , 2000     , 21       , 2000     , 25       , 40       , 18 ,
-( woods     )    infinite , 2000     , 60       , 2000     , 35       , 50       , 38 ,
-( roads     )    infinite , 2000     , 16       , 2000     , 48       , 38       , 16 ,
+: >= < not ;
 
-constant terraincosts
+: rangechk ( x y addr -- x y addr)
+  dup @ ( x y start max )
+  >r over r@ >= if abort" Table row out of range" then
+  2 pick r> >= if abort" Table column out of range" then ( x y start)
+;
+
+: tablexy ( x y addr -- addr2)
+  rangechk
+  @+ ( x y size start )
+  swap >r ( x y start |size)
+  rot cells+
+  swap r> * cells+
+;
+
+\ 4 5 <table> -- val
+: xy@ ( x y addr -- addr)
+  tablexy @
+;
+
+: xy! tablexy ! ;
+: xy+! tablexy +! ;
+
+: cfill ( addr cells value -- )
+  -rot
+  times
+    2dup !
+    cell+
+  iterate
+  2drop
+;
+
+: default ( n addr -- )
+  @+ swap  ( n start size )
+  dup * rot cfill
+;
+
+: clear ( addr)
+  0 swap default
+;
+
+: size@ @ ;
+
+: row! ( n y addr -- )
+  2dup @ >= if abort" Illegal row store" then
+  @+ ( n y size start )
+  swap dup>r  ( n y start size |r: size)
+  rot * cells+  ( n row^ |r:size)
+  r> rot cfill
+;
+
+: col! ( n x addr -- )
+  2dup @ >= if abort" Illegal col store" then
+  @+ swap dup  times  ( n x rowStart size)
+      over 2>r           ( n x rowStart |r: size rowStart)
+      over cells+  ( n x col^ | size rowStart)
+      2 pick      ( n x col^ n| size rowStart)
+      swap ! ( n x  |size rowStart)
+      r> r@ cells+ r> ( n x nextRowStart size)
+  iterate
+  4 drops
+; 
+
+
+#terrains xtable costs
+
+: self! ( n x -- ) dup costs xy! ;
+: self@ ( x -- ) dup costs xy@ ;
+
+\ set cost from terrain y to any OTHER to n
+: any> ( n y -- )
+  dup dup self@ ( n y y c)
+  2>r ( n y |r: y c)
+  costs col!
+  r> r> self!
+;
+
+\ set cost of moving to any OTHER terrain from terrain y, to n
+: >any ( n y -- )
+  dup dup self@ ( n y y c)
+  2>r ( n y |r: y c)
+  costs row!
+  r> r> self!
+;
+
+\ set cost of moving from x -> y terrain to n
+: cost! ( n x y -- ) costs xy! ;
+: cost@ ( x y -- cost ) costs xy@ ;
+: cost? cost@ . ;
+
+
+
+\ from x to y is average of x->x and y->y
+\ from y to x is average of x->x and y->y
+: avg ( x y -- )
+  2dup dup cost@ swap dup cost@  ( x y ycost xcost)
+  + 2/ ( x y average)
+  >r   ( x y |r: average)
+  2dup r@ -rot cost!
+  swap r> -rot cost!
+;
+
 10 constant cheapest
 
-: typerow ( terrain -- addr)
-    #terrains * cells
-    terraincosts +
+: averages!
+  costs size@ ( size start)
+  0 do
+    costs size@
+    0 do
+      i j cost@
+      cheapest = if  i j avg      then
+    loop
+  loop
 ;
 
-: typecol ( terrain addr -- cost)
-    swap cells +
+cheapest costs default
+
+infinite impassible self!
+15 opensea self!   
+12 city self!
+10 coastalsea self!
+16 plains self!
+36 woods self!
+12 roads self!
+20 ltwoods self!
+20 hills self!
+24 woodedhills self!
+80 mountains self!
+120 swamp self!
+30 desert self!
+35 scrub self!
+28 rough self!
+12 river self!
+
+
+averages!
+
+2000 coastalsea any>
+2000 coastalsea >any
+
+5000 opensea any>
+5000 opensea >any
+
+750 river any>
+750 river >any
+
+river coastalsea avg
+river opensea avg
+
+coastalsea opensea avg
+
+500 city coastalsea cost!
+500 city opensea cost!
+
+100 coastalsea city cost!
+100 opensea city cost!
+
+24 roads plains cost!
+
+infinite impassible >any
+infinite impassible any>
+
+: .costs
+  #terrains 0 do
+    #terrains 0 do
+      i j costs xy@ u. tab
+    loop
+    cr
+  loop
+  cr
 ;
+
+.costs
 
 : orthogcost ( from to -- cost)
-    sq@ swap sq@
-    typerow ( dest addr)
-    typecol @
+  sq@ swap sq@ swap
+  cost@
 ;
 
-: diagcost ( from to -- cost)
-    sq@ swap sq@
-    typerow ( dest addr)
-    typecol @ 14142 10000 */
-;
+: diagcost ( from to -- cost) orthogcost 2828427 2000000 */ ;
 
 export{
 
@@ -61,6 +231,7 @@ export{
         else diagcost
         then then
 ;
+
 
 }export
 

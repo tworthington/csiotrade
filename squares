@@ -11,28 +11,10 @@ definitions
 
 \ ---------------------
 
-16 constant #terrains
+variable #terrains
+0 #terrains !
+
 20000000 constant infinite
-
-\ Cost is really risk plus time for state changes (land to sea)
-
-#terrains enums:
-impassible
-opensea
-city
-coastalsea
-plains
-woods
-roads
-ltwoods
-hills
-woodedhills
-mountains
-swamp
-desert
-scrub
-rough
-river
 
 \ a table n x n in size
 : xtable ( n <name> -- )
@@ -105,7 +87,7 @@ river
 ; 
 
 
-#terrains xtable costs
+256 xtable costs
 
 : self! ( n x -- ) dup costs xy! ;
 : self@ ( x -- ) dup costs xy@ ;
@@ -131,8 +113,6 @@ river
 : cost@ ( x y -- cost ) costs xy@ ;
 : cost? cost@ . ;
 
-
-
 \ from x to y is average of x->x and y->y
 \ from y to x is average of x->x and y->y
 : avg ( x y -- )
@@ -143,7 +123,23 @@ river
   swap r> -rot cost!
 ;
 
-10 constant cheapest
+10 constant cheapest \ = 60miles per day=30"
+
+: scale:: create , , does> 2@ */ ;
+
+: +terrain ( <name> -- )
+  #terrains @ dup 256 = if abort" Too many terrains!" then
+  constant
+  1 #terrains +!
+;
+
+: prev-terrain #terrains @ 1- ;
+
+: " ( n <name> -- ) 10 30 rot */ ( cost <name> )
+  +terrain
+  prev-terrain ( cost index )
+  self!
+;
 
 : averages!
   costs size@ ( size start)
@@ -158,23 +154,23 @@ river
 
 cheapest costs default
 
++terrain impassible
 infinite impassible self!
-15 opensea self!   
-12 city self!
-10 coastalsea self!
-16 plains self!
-36 woods self!
-12 roads self!
-20 ltwoods self!
-20 hills self!
-24 woodedhills self!
-80 mountains self!
-120 swamp self!
-30 desert self!
-35 scrub self!
-28 rough self!
-12 river self!
-
+25 " opensea   
+ 9 " city
+30 " coastalsea
+ 8 " plains
+ 3 " woods
+12 " roads
+ 6 " ltwoods
+ 6 " hills
+ 3 " woodedhills
+ 3 " mountains
+ 1 " swamp
+ 3 " desert
+ 2 " scrub
+ 3 " rough
+12 " river
 
 averages!
 
@@ -204,8 +200,8 @@ infinite impassible >any
 infinite impassible any>
 
 : .costs
-  #terrains 0 do
-    #terrains 0 do
+  #terrains @ 0 do
+    #terrains @ 0 do
       i j costs xy@ u. tab
     loop
     cr
@@ -213,7 +209,7 @@ infinite impassible any>
   cr
 ;
 
-.costs
+\ .costs
 
 : orthogcost ( from to -- cost)
   sq@ swap sq@ swap

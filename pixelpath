@@ -294,7 +294,6 @@ cities map1cities
 312 217  1700 s" Forest Town" city
 387 577  2900 s" Iggs" city
 433 444   600 s" Three Roads Part" city
-531 472   750 s" Marshgate" city
 701 371   100 s" Spitville"  city
 743 220  1100 s" Monkstown" city
 872 88    800 s" North Shields" city
@@ -304,7 +303,7 @@ cities map1cities
 : named: 0 do i map1cities 2constant loop ;
 
 #cities named: westport southFarm bigCity northFarm portaferry
-northport forestTown iggs 3roadspart marshgate spitville
+northport forestTown iggs 3roadspart spitville
 monkstown northShields faropolis southShields
 
 \ trade from city

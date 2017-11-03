@@ -367,8 +367,8 @@ variable scale
 
 : process ( vector -- )
     mapsquares 0 do
-        dup i v@ 255 scale @ */
-        emit
+      dup i v@ dup if  255 scale @ */ 1 max      then
+      emit
     loop
     drop
 ;

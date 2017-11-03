@@ -71,7 +71,21 @@ width height * constant mapsquares
 4 field: importantcolours
 constant >colour0
 
-raw data + constant >origin
+raw data + constant >raworigin
+
+create >origin
+width height * dup expand drop 
+allot
+
+: flip
+  height times
+    >raworigin width i * +
+    >origin width height i - * +
+    width move
+  iterate
+;
+
+flip
 
 : colourdump
     base @ hex

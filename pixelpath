@@ -119,7 +119,7 @@ sqrts @ 4 / +vector: bestmove
   2sqrt 10 2 */
 ;
 
-: heuristicz 0 and ;
+: heuristic 0 and ;
 
 : update ( from next cost)
   2dup costsofar rot v!

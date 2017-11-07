@@ -355,9 +355,10 @@ variable scale
 
 
 : calibrate ( vector -- )
-    [[ vectors    
-    maximum  scale !
-    ]]
+  [[ vectors    
+  maximum 2sqrt
+  scale !
+  ]]
 ;
 
 : open> ( caddr len -- handle)
@@ -367,7 +368,7 @@ variable scale
 
 : process ( vector -- )
     mapsquares 0 do
-      dup i v@ dup if  255 scale @ */ 1 max      then
+      dup i v@ dup if  2sqrt 255 scale @ */ 1 max      then
       emit
     loop
     drop
@@ -413,12 +414,13 @@ variable scale
     drop
 ;
 
-: domainmap ( city)
+: domainmap ( city map)
+    2dup
     >sq @ pixelpathAll
     s" domain.pgm" open>
     startfile
-    40 domain
+    >pop @ 2sqrt 1 max domain
     close
 ;
 
-: t northShields domainmap ;
+: t portaferry domainmap ;

@@ -179,7 +179,11 @@ infinite impassible self!
  2 " scrub
  3 " rough
 15 " river
- 6 " ford
+6 " ford
+1 " jungle
+2 " snow
+2 " ice
+6 " tundra
 
 averages!
 
@@ -213,7 +217,7 @@ opensea swamp avg
 100 coastal city cost!
 100 opensea city cost!
 
-24 roads plains cost!
+60 roads plains cost!
 
 infinite impassible >any
 infinite impassible any>

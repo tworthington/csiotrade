@@ -80,7 +80,7 @@ allot
 : flip
   height times
     >raworigin width i * +
-    >origin width height i - * +
+    >origin width height i - 1- * +
     width move
   iterate
 ;

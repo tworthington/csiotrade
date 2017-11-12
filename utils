@@ -46,6 +46,9 @@ wordlist: utils
 
 : 2constant ( a b <name> -- ) create , , does> (2constant) ;
 
+: $@ 2@ ;
+: $! ( caddr len addr -- ) tuck ! ! ;
+
 : u.s depth times i pick u. iterate ;
 
 16 constant rowlength

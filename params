@@ -1,0 +1,73 @@
+get-order get-current
+
+requires utils
+
+wordlist: params
+params first definitions
+
+\ #arg1    2      3     4
+\ arg 0    1      2     3
+\ forth pixelpath map1 scale
+
+: default2 s" testmap.bmp" ;
+
+\ pixels per mile
+: default3 4 ;
+
+: rindex ( caddr len char -- pos|-1)
+  swap times ( caddr char)
+    over i + c@ ( caddr char test)
+    over = if 2drop i unloop exit then
+  iterate
+  2drop -1
+;
+  
+: -suffix ( caddr len -- caddr len2)
+  2dup [char] . rindex
+  dup -1 <> if nip else drop then
+;
+
+: arg2
+  #args 3 < if default2 else 2 arg then
+  -suffix
+;
+
+: arg3 ( -- n )
+  #args 4 < if default3 else
+    0. 3 arg >number 2drop d>s
+  then
+;
+
+global{
+
+\ pad is caddr3
+: +suffix ( caddr1 len1 caddr2 len2 -- caddr3 len3)
+  2swap
+  2dup pad swap move ( caddr2 len2 cadd1 len1)
+  nip  ( caddr2 len2 len1)
+  dup>r pad + ( caddr2 len2 caddr3b| len1)
+  >r 2dup r> swap move  ( caddr2 len2 |len1)
+  nip r> + pad swap
+;
+
+\ Note the cell+ .... zmove!
+: fix$ ( caddr len <name> -- )
+  align here ( caddr len $loc)
+  over cell+ allot
+  >r 2dup r@ swap zmove ( caddr len |: loc)
+  nip r> swap
+  create , ,
+;
+
+: .$ ( addr -- ) 2@ type ;
+
+2variable basename
+arg2 basename 2!
+basename 2@ s" .bmp" +suffix fix$ mapname
+basename 2@ s" .cities" +suffix fix$ cityfile
+arg3 constant mapscale
+
+}global
+
+set-current set-order
+

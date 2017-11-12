@@ -6,20 +6,24 @@ forth only
 definitions
 
 requires utils
+order
+digression params "params"
 
 digression lists "lists"
 
-lists last
-
+\ lists last
+order
 digression pqueues "pqueue"
 
-pqueues last
+\ pqueues last
+order
+digression mapmaking "bmpread"
+\ mapmaking first
 
+order
 requires squares
 squares first
 
-digression mapmaking "bmpread"
-mapmaking first
 
 routeapp first definitions
 
@@ -283,28 +287,9 @@ variable (cities)
 : >trade
   >city 4 cells + ;
 
-\ x y pop name
-cities map1cities
-57 169  10000 s" Westport" city
-84 571    150 s" South Farm" city
-136 697 20000 s" Big City" city
-147 116   150 s" North Farm" city
-147 421    20 s" Portaferry" city
-192  40   120 s" Northport" city
-312 217  1700 s" Forest Town" city
-387 577  2900 s" Iggs" city
-433 444   600 s" Three Roads Part" city
-701 371   100 s" Spitville"  city
-743 220  1100 s" Monkstown" city
-872 88    800 s" North Shields" city
-901 602  3000 s" Faropolis" city
-932 327   800 s" South Shields" city
+: named: 0 do i over 2constant loop drop ;
 
-: named: 0 do i map1cities 2constant loop ;
-
-#cities named: westport southFarm bigCity northFarm portaferry
-northport forestTown iggs 3roadspart spitville
-monkstown northShields faropolis southShields
+cityfile 2@ included
 
 \ trade from city
 : citytrade ;

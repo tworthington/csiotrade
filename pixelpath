@@ -232,7 +232,9 @@ sqrts @ 4 / +vector: bestmove
 
 
 : (trade) ( pop1 pop2 pathdist) dup 1000 */ ?dup if */ else 2drop 0 then ;
-: (trade) ( pop1 pop2 pathdist) */ ;
+: (trade) ( pop1 pop2 pathdist)
+  >r 4 mapscale */
+  r> */ ;
 
 : trade ( fromx fromy pop1 pop2 -- m )
     2swap xy>sq ( p1 p2 from )
@@ -287,7 +289,8 @@ variable (cities)
 : >trade
   >city 4 cells + ;
 
-: named: 0 do i over 2constant loop drop ;
+: named: ( map #cities -- )
+  0 do i over 2constant loop drop ;
 
 cityfile 2@ included
 
@@ -347,14 +350,15 @@ variable scale
 ;
 
 : open> ( caddr len -- handle)
-    2dup type cr
-    drop 438 swap 2 8 linux
-    dup 0= throw ;
-
+  2dup type cr
+  drop 438 swap 2 8 linux
+  dup 0= throw
+;
+  
 : process ( vector -- )
     mapsquares 0 do
-      dup i v@ dup if  2sqrt 255 scale @ */ 1 max      then
-      emit
+      dup i v@ dup if  2sqrt 255 scale @ */ 1 max
+      then emit
     loop
     drop
 ;

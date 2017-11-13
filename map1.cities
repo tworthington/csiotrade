@@ -1,0 +1,10 @@
+\ x y pop name
+cities map1cities
+1644 1163 3200 s" Ossary" city
+1687 1054 135 s" Sea Rune" city
+884 230 2000 s" Thunderhold" city
+1156 70 9400 s" Warwick" city
+887 907 20000 s" CSIO" city
+
+map1cities #cities named:
+ossary seaRune thunderhold warwick csio

@@ -387,29 +387,29 @@ variable scale
 : trademap
     alltrade
     tradevol calibrate
-    s" test.pgm" open>
+    tradepgm open>
     tradevol output
     close
 ;
 
 : domain ( scale -- )
-    mapsquares 0 do
-      costsofar i v@ dup if
+  mapsquares 0 do
+    costsofar i v@ dup if
       over / 
-        255 swap - 1 max
-      then
-       emit
-    loop
-    drop
+      255 swap - 1 max
+    then
+    emit
+  loop
+  drop
 ;
 
 : domainmap ( city map)
     2dup
     >sq @ pixelpathAll
-    s" domain.pgm" open>
+    domainpgm open>
     startfile
     >pop @ 2sqrt 1 max domain
     close
 ;
 
-: t portaferry domainmap ;
+: t csio domainmap ;

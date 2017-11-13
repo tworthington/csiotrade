@@ -62,9 +62,17 @@ global{
 : .$ ( addr -- ) 2@ type ;
 
 2variable basename
+: b+" basename 2@ [char] " parse +suffix fix$ ;
+
 arg2 basename 2!
-basename 2@ s" .bmp" +suffix fix$ mapname
-basename 2@ s" .cities" +suffix fix$ cityfile
+
+b+" .bmp" mapname
+b+" .cities" cityfile
+b+" .trade.pgm" tradepgm
+b+" .domain.pgm" domainpgm
+
+mapname 2@ type
+
 arg3 constant mapscale
 
 }global

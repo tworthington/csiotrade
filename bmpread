@@ -94,12 +94,18 @@ constant >colour0
 raw data + constant >raworigin
 
 create >origin
-width height * dup expand drop 
+width 3 and 4 swap - 4 mod constant padding
+width padding + constant filewidth
+
+filewidth height * dup expand drop 
 allot
 
+\ bmp files are upside down, so we flip them in-memory.
+\ The bmp file has padding; this is a pain to work with
+\ so we strip it out when making the in-memory version.
 : flip
   height times
-    >raworigin width i * +
+    >raworigin filewidth i * +
     >origin width height i - 1- * +
     width move
   iterate

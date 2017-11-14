@@ -1,5 +1,18 @@
 wordlist: utils
 
+: ]+
+  ] lit
+  postpone +
+; immediate
+
+: ]*
+  ] lit
+  postpone *
+; immediate
+
+
+: ]# ] lit ; immediate
+
 : $delimit
   char parse   ( caddr len)
 ;

@@ -169,6 +169,7 @@ export{
 : .xy >xy swap s>d <# #s #> type [char] , emit . ;
 
 : xy>sq ( x y -- n) width * + ;
+: >sq, ( x y -- n) width * + , ;
 
 : sq@ ( n -- val) >origin + c@ ;
 

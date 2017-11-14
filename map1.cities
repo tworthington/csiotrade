@@ -1,10 +1,21 @@
-\ x y pop name
-cities map1cities
+[[ cities
+\ (link) (trade) (type) sq pop name  civ/lv race/class alignment  city/cit
+city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier" 
+city: csio 887 907 >sq, 20000 , 8 , human , N , ," CSIO"
+]]
+
+(
+881 1039 215 s" Goodhap" city
+854 1126 310 s" Dearthmead" city
+888 1186 224 s" Luckstone" city
+1607 123 267 s" Armagh" city
+781 456 462 s" Byrny" city
 1644 1163 3200 s" Ossary" city
 1687 1054 135 s" Sea Rune" city
+1227 604 1230 s" Modron" city
 884 230 2000 s" Thunderhold" city
+1356 512 2540 s" Sticklestead" city
 1156 70 9400 s" Warwick" city
 887 907 20000 s" CSIO" city
 
-map1cities #cities named:
-ossary seaRune thunderhold warwick csio
+)

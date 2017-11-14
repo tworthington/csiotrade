@@ -1,0 +1,109 @@
+requires utils
+
+wordlist: cities
+
+get-current
+cities first definitions
+\ (link) (trade) x y pop name ( civ/lv race/class alignment ) city/cit
+
+\ city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier"
+\ citystats 4 th >pop @ .
+
+9 enums: N LG NG CG CN CE NE LE LN
+
+4 enums: human elf hobbit dwarf
+
+2 enums: settlement citadel
+
+\ head, count
+create  citystats 0 , 0 ,
+
+export{
+
+: #cities ( list -- n ) cell+ @ ;
+
+}export
+
+: count++ ( citylist -- ) cell+ 1 swap +! ;
+
+: overflow? ( n citylist -- n citylist)
+  2dup
+  #cities > if abort" City index out of range" then
+;
+
+: (city) ( <itemname> -- )
+  create
+  citystats
+  here ( head* new*)
+  over @ ( head* new* oldhead)
+  , over ! \ link field
+  0 ,  \ zero trade field
+  count++
+;
+
+export{
+: city: (city)   settlement , ;
+
+: stronghold: (city) citadel , ;
+
+: thcity ( n -- city_n)
+  citystats @ swap
+  times
+    @ iterate ;
+
+}export
+
+: 0th citystats @ ;
+: 1st 1 thcity ;
+: 2nd 2 thcity ;
+: 3rd 3 thcity ;
+
+: >city ( i base ) swap thcity ;
+
+: field ( offset size <name> -- offset2)
+  create over ,
+  +
+does> ( base addr -- addr2)
+  @ + ;
+
+: cell:: cell field ;
+: cells::
+  cells  field
+;
+
+: alias:: ( field <name> )
+  ' >pf @ @ 0 field drop ;
+
+: {{ 0 ;
+: }} drop ;
+
+export{
+{{
+cell:: >link
+cell:: >trade
+cell:: >type
+cell:: >sq
+cell:: >pop
+cell:: >civ
+cell:: >race
+cell:: >alignment
+2 cells:: >name
+}}
+
+alias:: >civ >lv
+alias:: >race >class
+
+: .city ( base)
+  dup>r
+  >name count type cr
+  tab ." Population: " r@ >pop @ . cr
+  tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
+  tab ." Civilisation: " r@ >civ @ . cr
+  tab ." Race: " r> >race @ . cr
+;
+
+: #cities citystats #cities ;
+
+}export
+
+previous set-current

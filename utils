@@ -13,6 +13,8 @@ wordlist: utils
 
 : ]# ] lit ; immediate
 
+1 cells constant cell
+
 : $delimit
   char parse   ( caddr len)
 ;
@@ -61,6 +63,14 @@ wordlist: utils
 
 : $@ 2@ ;
 : $! ( caddr len addr -- ) tuck ! ! ;
+
+: ," ( <string>" -- )
+  [char] " parse ( caddr len)
+  align
+  dup ,
+  here over cell+ allot
+  swap zmove
+;
 
 : u.s depth times i pick u. iterate ;
 

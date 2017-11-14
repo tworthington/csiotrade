@@ -24,6 +24,7 @@ order
 requires squares
 squares first
 
+digression city: "cities"
 
 routeapp first definitions
 
@@ -260,43 +261,6 @@ sqrts @ 4 / +vector: bestmove
   then
 ;
 
-variable (cities)
-: cities ( <name> )  0 (cities) !  create here cell+ , does> @ ;
-
-\ sq pop name namelen
-: city ( x y pop caddr len)
-  2>r -rot xy>sq , , 2r> swap , ,
-  0 , \ trade
-  1 (cities) +! ;
-
-: #cities (cities) @ ;
-
-: >city ( i base -- addr) swap 5 cells * + ;
-
-: .city ( i base )
-  >city
-  @+ swap .xy
-  @+ swap ." Population: " .
-  @+ @ type
-;
-
-( i base -- things)
-: >sq >city ;
-: >pop >city cell+ ;
-: >cityname
-  >city
-  2 cells+ @+ @ ;
-: >trade
-  >city [ 4 cells ]+ ;
-: >civ
-  >city [ 5 cells ]+ ;
-: >lv >civ ;
-: >race [ 6 cells ]+ ;
-: >class >race ;
-: >align [ 7 cells ]+ ;
-
-: named: ( map #cities -- )
-  0 do i over 2constant loop drop ;
 
 cityfile 2@ included
 
@@ -306,10 +270,10 @@ cityfile 2@ included
 : tradereport
   0 ( tot)
   #cities times
-    i map1cities >cityname type ."  Trade: " tab
-    i map1cities >trade @ 
-    dup . ." (" dup i map1cities >pop @ / . ."  per person)" tab ." via: "
-    tradevol i map1cities >sq @ v@ dup . ." ("  i map1cities >pop @ / . ."  per person)"
+    i thcity >name type ."  Trade: " tab
+    i thcity >trade @ 
+    dup . ." (" dup i thcity >pop @ / . ."  per person)" tab ." via: "
+    tradevol i thcity >sq @ v@ dup . ." ("  i thcity >pop @ / . ."  per person)"
     cr
     + 
   iterate ." Total trade: " .
@@ -318,14 +282,14 @@ cityfile 2@ included
 : alltrade
   #cities times
     i if
-      i map1cities >sq @ pixelpathAll
+      i thcity >sq @ pixelpathAll
       i times
         i j <> if
-          i map1cities >sq @ >xy
-          i map1cities >pop @ j map1cities >pop @
-          ." From " i map1cities >cityname type tab
-          ." to " j map1cities >cityname type tab
-          traderoute dup i map1cities >trade +! j map1cities >trade +!
+          i thcity >sq @ >xy
+          i thcity >pop @ j thcity >pop @
+          ." From " i thcity >name count type tab
+          ." to " j thcity >name count type tab
+          traderoute dup i thcity >trade +! j thcity >trade +!
         then
       iterate
     then

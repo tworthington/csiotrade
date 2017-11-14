@@ -129,8 +129,6 @@ variable #terrains
   swap r> -rot cost!
 ;
 
-10 constant cheapest \ = 60miles per day=30"
-
 : scale:: create , , does> 2@ */ ;
 
 : +terrain ( <name> -- )
@@ -143,7 +141,15 @@ variable #terrains
 
 : prev-terrain #terrains @ 1- ;
 
-: " ( n <name> -- ) 10 30 rot */ ( cost <name> )
+10 constant cheapest \ = 60miles per day=30"
+
+48 constant fastest
+
+fastest cheapest * mapscale * constant 1day
+1day 24 / constant 1hr
+1day 7 * constant 1week
+
+: " ( n <name> -- ) cheapest fastest rot */ ( cost <name> )
   +terrain
   prev-terrain ( cost index )
   self!
@@ -162,45 +168,46 @@ variable #terrains
 
 cheapest costs default
 
+\ These values are effectively 2 x the normal D&D move rates
 +terrain impassible
 infinite impassible self!
-25 " opensea
- 9 " city
-30 " coastal
- 8 " plains
- 3 " woods
-12 " roads
- 6 " ltwoods
- 6 " hills
- 3 " wdhills
- 3 " mts
+40 " opensea  \ slightly more risky, so avoid if possible
+18 " city
+48 " coastal
+16 " plains
+ 6 " woods
+24 " roads
+12 " ltwoods
+12 " hills
+ 6 " wdhills
+ 2 " mts
  1 " swamp
- 3 " desert
- 2 " scrub
- 3 " rough
-15 " river
-6 " ford
+ 6 " desert
+ 4 " scrub
+ 6 " rough
+30 " river
+12 " ford
 1 " jungle
-2 " snow
+4 " snow
 \ 2 " ice
 \ 6 " tundra
 
 averages!
 
-20000 coastal any>
-20000 coastal >any
+1week coastal any>
+1week coastal >any
 
-50000 opensea any>
-50000 opensea >any
+1week 2 * opensea any>
+1week 2 * opensea >any
 
-750 river any>
-750 river >any
+1hr 12 * river any>
+1hr 12 * river >any
 
-100 river ford cost!
-100 ford river cost!
+1hr 4 * river ford cost!
+1hr 4 * ford river cost!
 
-100 city river cost!
-100 river city cost!
+1day city river cost!
+1day river city cost!
 
 river coastal avg
 river opensea avg
@@ -211,13 +218,14 @@ river swamp avg
 coastal swamp avg
 opensea swamp avg
 
-500 city coastal cost!
-500 city opensea cost!
+1hr 6 * coastal city cost!
+1hr 6 * opensea city cost!
 
-100 coastal city cost!
-100 opensea city cost!
+1day city coastal cost!
+1day city opensea cost!
 
-60 roads plains cost!
+
+1hr roads plains cost!
 
 infinite impassible >any
 infinite impassible any>
@@ -227,7 +235,7 @@ infinite impassible any>
   #terrains @ 1 do i t$ type tab loop cr
   #terrains @ 1 do i . i tab t$ type tab
     #terrains @ 1 do
-      i j costs xy@ u. tab
+      j i costs xy@ u. tab
     loop
     cr
   loop

@@ -70,6 +70,7 @@ b+" .bmp" mapname
 b+" .cities" cityfile
 b+" .trade.pgm" tradepgm
 b+" .domain.pgm" domainpgm
+b+" .days.pgm" dayspgm
 
 mapname 2@ type
 

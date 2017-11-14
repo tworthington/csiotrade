@@ -287,7 +287,13 @@ variable (cities)
   >city
   2 cells+ @+ @ ;
 : >trade
-  >city 4 cells + ;
+  >city [ 4 cells ]+ ;
+: >civ
+  >city [ 5 cells ]+ ;
+: >lv >civ ;
+: >race [ 6 cells ]+ ;
+: >class >race ;
+: >align [ 7 cells ]+ ;
 
 : named: ( map #cities -- )
   0 do i over 2constant loop drop ;
@@ -387,7 +393,7 @@ variable scale
 : trademap
     alltrade
     tradevol calibrate
-    tradepgm open>
+    tradepgm 2@ open>
     tradevol output
     close
 ;
@@ -403,13 +409,32 @@ variable scale
   drop
 ;
 
+: days ( scale -- )
+  mapsquares 0 do
+    255
+    costsofar i v@
+    1day / 1+ /
+    emit
+  loop
+  drop
+;
+
+: daysmap ( city map)
+    2dup
+    >sq @ pixelpathAll
+    dayspgm 2@ open>
+    startfile
+    >pop @ 2sqrt 1 max days
+    close
+;
+
 : domainmap ( city map)
     2dup
     >sq @ pixelpathAll
-    domainpgm open>
+    domainpgm 2@ open>
     startfile
     >pop @ 2sqrt 1 max domain
     close
 ;
 
-: t csio domainmap ;
+: t csio daysmap ;

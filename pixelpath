@@ -294,6 +294,7 @@ cityfile 2@ included
       iterate
     then
   iterate
+  tradereport
 ;
 
 : t alltrade ;

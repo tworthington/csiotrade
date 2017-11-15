@@ -270,7 +270,7 @@ cityfile 2@ included
 : tradereport
   0 ( tot)
   #cities times
-    i thcity >name type ."  Trade: " tab
+    i thcity >name count type ."  Trade: " tab
     i thcity >trade @ 
     dup . ." (" dup i thcity >pop @ / . ."  per person)" tab ." via: "
     tradevol i thcity >sq @ v@ dup . ." ("  i thcity >pop @ / . ."  per person)"
@@ -294,7 +294,6 @@ cityfile 2@ included
       iterate
     then
   iterate
-  tradereport
 ;
 
 : t alltrade ;

@@ -15,6 +15,30 @@ cities first definitions
 
 2 enums: settlement citadel
 
+
+: .race ( n -- )
+  case
+    r@ human = of ." Human" endof
+    r@ elf = of ." Elf" endof
+    r@ hobbit = of ." Hobbit" endof
+    r@ dwarf = of ." Dwarf" endof
+  endcase
+;
+
+: .align
+  case
+    r@ N = of ." Neutral" endof
+    r@ LG = of ." Lawful Good" endof
+    r@ NG = of ." Neutral Good" endof
+    r@ CG = of ." Chaotic Good" endof
+    r@ CN = of ." Chaotic Neutral" endof
+    r@ CE = of ." Chaotic Evil" endof
+    r@ NE = of ." Neutral Evil" endof
+    r@ LE = of ." Lawful Evil" endof
+    r@ LN = of ." Lawful Neutral" endof
+  endcase
+;
+
 \ head, count
 create  citystats 0 , 0 ,
 
@@ -115,7 +139,8 @@ alias:: >race >class
   tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
   tab ." Trade:" r@ >trade @ . cr
   tab ." Civilisation: " r@ >civ @ . cr
-  tab ." Race: " r> >race @ . cr
+  tab ." Race: " r@ >race @ .race cr
+  tab ." Align: " r> >alignment @ .align cr
 ;
 
 : #cities citystats #cities ;

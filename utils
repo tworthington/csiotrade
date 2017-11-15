@@ -19,6 +19,16 @@ wordlist: utils
   char parse   ( caddr len)
 ;
 
+variable (case)
+: case postpone >r 0 (case) ! ; immediate
+: endcase
+  (case) @ times postpone then iterate
+  postpone rdrop
+  0 (case) !
+; immediate
+: of 1 (case) +! postpone if ; immediate
+: endof postpone else ; immediate
+
 : digression ( <word> <char>file<char> -- )
   bl word find nip
   $delimit     ( flag caddr len)

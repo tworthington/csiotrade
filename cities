@@ -93,6 +93,21 @@ cell:: >alignment
 alias:: >civ >lv
 alias:: >race >class
 
+
+: next ( item -- item2 | 0) >link @ ;
+
+\ citystats foreach .city
+: foreach ( base <name> -- ? )
+  ' >r
+  @ ?dup if  ( 0th )
+    begin
+      dup r@ execute
+      next
+    ?dup 0= until
+  then
+  rdrop
+;
+
 : .city ( base)
   dup>r
   >name count type cr

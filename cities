@@ -113,6 +113,7 @@ alias:: >race >class
   >name count type cr
   tab ." Population: " r@ >pop @ . cr
   tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
+  tab ." Trade:" r@ >trade @ . cr
   tab ." Civilisation: " r@ >civ @ . cr
   tab ." Race: " r> >race @ . cr
 ;

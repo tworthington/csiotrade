@@ -1,7 +1,12 @@
 [[ cities
 \ (link) (trade) (type) sq pop name  civ/lv race/class alignment  city/cit
-city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier" 
 city: csio 887 907 >sq, 20000 , 8 , human , N , ," CSIO"
+city: warwick 1156 70 >sq, 9400 , 9 , human , N , ," Warwick"
+city: ossary 1644 1163 >sq,  3200 , 8 , human , CE , ," Ossary"
+city: sticklestead 1356 512 >sq, 2540 , 5 , human , N , ," Sticklestead"
+city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier"
+city: thunderhold 884 230 >sq,  2000 , 9 , dwarf , LG , ," Thunderhold"
+city: modron 1227 604 >sq,  1230 , 9 , human , N , ," Modron"
 ]]
 
 (
@@ -10,12 +15,10 @@ city: csio 887 907 >sq, 20000 , 8 , human , N , ," CSIO"
 888 1186 224 s" Luckstone" city
 1607 123 267 s" Armagh" city
 781 456 462 s" Byrny" city
-1644 1163 3200 s" Ossary" city
 1687 1054 135 s" Sea Rune" city
-1227 604 1230 s" Modron" city
-884 230 2000 s" Thunderhold" city
-1356 512 2540 s" Sticklestead" city
-1156 70 9400 s" Warwick" city
+
+
+
 887 907 20000 s" CSIO" city
 
 )

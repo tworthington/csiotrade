@@ -9,12 +9,40 @@ cities first definitions
 \ city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier"
 \ citystats 4 th >pop @ .
 
+9 xtable alignrelations
+
+
+\ NN->anything = 1
+\ L->N =1
+\ G->N =1
+
+
 9 enums: N LG NG CG CN CE NE LE LN
 
-4 enums: human elf hobbit dwarf
+create aligntradetab
+\ N    LG  NG   CG   CN   CE   NE   LE   LN
+\ 85,100,  85 , 80 , 75 , 65 , 70 , 90 , 95 , \ Base
+85 , 100 , 85 , 80 , 75 , 65 , 70 , 90 , 95 , \ N
+70 , 100 , 85 , 65 , 50 , 30 , 35 , 75 , 95 , \ LG
+85 , 100 , 85 , 80 , 60 , 50 , 55 , 75 , 80 , \ NG
+70 ,  85 , 85 , 80 , 75 , 50 , 35 , 55 , 60 , \ CG
+85 ,  85 , 70 , 80 , 75 , 65 , 55 , 75 , 80 , \ CN
+70 ,  65 , 50 , 65 , 75 , 65 , 70 , 75 , 60 , \ CE
+85 ,  85 , 70 , 65 , 60 , 65 , 70 , 90 , 80 , \ NE
+70 ,  85 , 50 , 45 , 40 , 50 , 70 , 90 , 95 , \ LE
+85 , 100 , 70 , 65 , 60 , 50 , 55 , 90 , 95 , \ LN
+
+\ a1's opinion of a2
+: align@ ( a1 a2 -- % )
+  aligntradetab rot 9 * rot + cells+ @ ;
+
+: alignedtrade ( trade a1 a2 -- trade2)
+  2dup align@ -rot align@ * 10000 */ ;
+  
+
+5 enums: human elf hobbit dwarf gnoll
 
 2 enums: settlement citadel
-
 
 : .race ( n -- )
   case

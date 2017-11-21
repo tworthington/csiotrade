@@ -373,32 +373,31 @@ variable scale
   drop
 ;
 
-: days ( scale -- )
+: days ( -- )
   mapsquares 0 do
     255
-    costsofar i v@
-    1day / 1+ /
+      costsofar i v@
+      1day / 1+
+    /
     emit
   loop
-  drop
 ;
 
-: daysmap ( city map)
-    2dup
+: daysmap ( city )
     >sq @ pixelpathAll
     dayspgm 2@ open>
     startfile
-    >pop @ 2sqrt 1 max days
+    days
     close
 ;
 
-: domainmap ( city map)
-    2dup
-    >sq @ pixelpathAll
-    domainpgm 2@ open>
-    startfile
-    >pop @ 2sqrt 1 max domain
-    close
+: domainmap ( city )
+  dup
+  >sq @ pixelpathAll
+  domainpgm 2@ open>
+  startfile
+  >pop @ 2sqrt 1 max domain
+  close
 ;
 
 : t csio daysmap ;

@@ -9,13 +9,10 @@ cities first definitions
 \ city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier"
 \ citystats 4 th >pop @ .
 
-9 xtable alignrelations
-
 
 \ NN->anything = 1
 \ L->N =1
 \ G->N =1
-
 
 9 enums: N LG NG CG CN CE NE LE LN
 
@@ -36,11 +33,30 @@ create aligntradetab
 : align@ ( a1 a2 -- % )
   aligntradetab rot 9 * rot + cells+ @ ;
 
-: alignedtrade ( trade a1 a2 -- trade2)
+: aligntrade ( trade a1 a2 -- trade2)
   2dup align@ -rot align@ * 10000 */ ;
   
+: techtrade ( trade t1 t2 -- trade2) + 1+ * ;
 
-5 enums: human elf hobbit dwarf gnoll
+12 enums:
+dwarf elf gnome half-elf hobbit half-orc human
+gnoll goblin orc  balrog ogre 
+
+100 constant P
+90 constant G
+75 constant T
+50 constant N
+30 constant A
+5 constant H
+0 constant F
+
+
+create racetradetab
+\ dw el gn  he  hb  ho  hu  gl  go  or  ba  og
+P , A , G , N , G , H , N , H , H , H , F , F , \ dw
+A , P , T , G , T , A , N , A , A , H , H , H , \ el
+G , T , P , T , G , H , N , H , H , H , F , F , \ gn
+
 
 2 enums: settlement citadel
 

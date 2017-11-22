@@ -231,24 +231,37 @@ sqrts @ 4 / +vector: bestmove
   ." Time: "  ns- .ns cr
 ;
 
-
-: (trade) ( pop1 pop2 pathdist) dup 1000 */ ?dup if */ else 2drop 0 then ;
 : (trade) ( pop1 pop2 pathdist)
   >r 4 mapscale */
   r> */ ;
 
-: trade ( fromx fromy pop1 pop2 -- m )
-    2swap xy>sq ( p1 p2 from )
-    cost ( p1 p2 distance)
-    (trade)
+[[ cities
+: modifiers ( trade city1 city2 -- trade2)
+  2dup 2>r
+  >alignment @ swap
+  >alignment @  aligntrade
+  2r>
+  >civ @ swap
+  >civ @  techtrade
+;
+]]
+  
+: trade (  pop1 pop2 fromsq -- m )
+  cost ( p1 p2 distance)
+  (trade)
 ;
 
-: traderoute ( fromx fromy pop1 pop2 -- vol )
-  2over xy>sq >r
-  trade r> ( vol origin)
+\ Assumes pixelpathAll has been called for setup
+: traderoute ( cityFrom cityTo -- vol )
+  2dup 2>r
+  >pop @ swap ( pop1 from)
+  dup >pop @ swap >sq @ ( pop1 pop2 fromsq |r: cityFrom cityTo)
+  trade  ( vol |r: cityFrom cityTo)
+  r> r@ modifiers  ( vol2 |r: cityFrom)
+  r> >sq @
   over dup . cr if
     swap >r
-    begin
+    begin ( vol from)
       tradevol over r@ -rot >vi +!
       camefrom swap v@  ( sq | vol)
       dup destination @ =
@@ -260,7 +273,6 @@ sqrts @ 4 / +vector: bestmove
     0
   then
 ;
-
 
 cityfile 2@ included
 
@@ -285,10 +297,8 @@ cityfile 2@ included
       i thcity >sq @ pixelpathAll
       i times
         i j <> if
-          i thcity >sq @ >xy
-          i thcity >pop @ j thcity >pop @
-          ." From " i thcity >name count type tab
-          ." to " j thcity >name count type tab
+          ." From " i thcity dup >name count type tab
+          ." to " j thcity dup >name count type tab
           traderoute dup i thcity >trade +! j thcity >trade +!
         then
       iterate

@@ -40,25 +40,36 @@ create aligntradetab
 
 12 enums:
 dwarf elf gnome half-elf hobbit half-orc human
-gnoll goblin orc  balrog ogre 
+gnoll goblin ogre orc balrog
 
-100 constant P
-90 constant G
-75 constant T
-50 constant N
-30 constant A
-5 constant H
-0 constant F
-
+100 constant p
+95 constant g
+86 constant t
+71 constant n
+55 constant a
+32 constant h
+10 constant f
 
 create racetradetab
-\ dw el gn  he  hb  ho  hu  gl  go  or  ba  og
-P , A , G , N , G , H , N , H , H , H , F , F , \ dw
-A , P , T , G , T , A , N , A , A , H , H , H , \ el
-G , T , P , T , G , H , N , H , H , H , F , F , \ gn
-
+\ dw el gn  he  hb  ho  hu  gl  go  og  or  ba
+p , a , g , n , g , h , n , h , h , h , h , f , \ dw dwarf
+a , p , t , g , t , a , n , a , a , h , h , f , \ el elf
+g , t , p , t , g , h , n , h , h , f , h , f , \ gn gnoll
+n , p , t , p , n , a , t , a , a , h , h , f , \ he half-elf
+g , g , t , n , p , n , n , f , h , f , f , f , \ hb hobbit
+h , a , h , a , n , p , t , n , t , g , h , g , \ ho half orc
+n , n , n , t , n , n , p , a , a , h , h , f , \ hu human
+h , h , h , h , h , h , a , p , a , g , t , g , \ gl gnoll
+h , a , h , a , h , t , a , a , p , h , n , g , \ go golin
+f , f , h , f , a , t , t , t , a , p , t , n , \ og ogre
+f , f , h , h , a , g , t , n , t , g , h , g , \ or orc
+h , f , h , f , n , g , t , n , g , n , g , p , \ ba balrog
 
 2 enums: settlement citadel
+
+: race@ ( r1 r2 -- % ) racetradetab rot 12 * rot + cells+ @ ;
+
+: racetrade ( trade r1 r2 -- trade2) 2dup race@ -rot race@ * 10000 */ ;
 
 : .race ( n -- )
   case

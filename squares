@@ -168,7 +168,7 @@ fastest cheapest * mapscale * constant 1day
 
 cheapest costs default
 
-\ These values are effectively 2 x the normal D&D move rates
+\ These values are effectively 20 x the normal D&D move rates
 +terrain impassible
 infinite impassible self!
 40 " opensea  \ slightly more risky, so avoid if possible
@@ -200,8 +200,8 @@ averages!
 1week 2 * opensea any>
 1week 2 * opensea >any
 
-1hr 12 * river any>
-1hr 12 * river >any
+1week river any>
+1week river >any
 
 1hr 4 * river ford cost!
 1hr 4 * ford river cost!

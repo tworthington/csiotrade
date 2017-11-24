@@ -124,7 +124,7 @@ sqrts @ 4 / +vector: bestmove
   2sqrt 10 2 */
 ;
 
-: heuristic 0 and ;
+\ : heuristic 0 and ;
 
 : update ( from next cost)
   2dup costsofar rot v!
@@ -309,7 +309,26 @@ cityfile 2@ included
   iterate
 ;
 
-: t alltrade ;
+[[ cities 
+: onetrade ( city --)
+  dup>r >sq @ pixelpathAll
+  [[ vectors tradevol clear ]]
+  citystats
+  begin (  prev |r: city)
+    next ?dup while r@ (  next city )
+      2dup <> if
+        ." From " >name count type tab
+          ." to " dup >name count type tab ( next )
+        dup r@
+        traderoute ( next vol)
+        dup r@ >trade +!
+        over >trade +!
+        else drop
+      then
+    repeat
+    rdrop
+;
+]]
 
 : .trade xy>sq tradevol swap v@ . ;
 
@@ -368,7 +387,6 @@ variable scale
     1 15 user ! ;
 
 : trademap
-    alltrade
     tradevol calibrate
     tradepgm 2@ open>
     tradevol output
@@ -397,7 +415,7 @@ variable scale
 ;
 
 : daysmap ( city )
-    >sq @ pixelpathAll
+  >sq @ pixelpathAll
     dayspgm 2@ open>
     startfile
     days
@@ -414,3 +432,6 @@ variable scale
 ;
 
 : t csio daysmap ;
+
+: globaltrademap alltrade trademap ;
+: citytrademap ( city ) onetrade trademap ;

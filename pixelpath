@@ -124,7 +124,7 @@ sqrts @ 4 / +vector: bestmove
   2sqrt 10 2 */
 ;
 
-\ : heuristic 0 and ;
+: heuristic 0 and ;
 
 : update ( from next cost)
   2dup costsofar rot v!
@@ -151,7 +151,7 @@ sqrts @ 4 / +vector: bestmove
       while
           1-
           swap   ( list-1 l-1 sq_l |current)
-          r@ over move£  ( list l next cost | current)
+          r@ over move£ r@ turb ( list l next cost | current)
           costsofar r@ v@ +  ( list l next tcost | current)
           over costsofar swap v@  ( list l next tcost csf)
           dup 0=  >r ( list l next tcost csf  |current flg)
@@ -178,7 +178,7 @@ sqrts @ 4 / +vector: bestmove
       while
           1-
           swap   ( list-1 l-1 sq_l |current)
-          r@ over move£  ( list l next cost | current)
+          r@ over move£ r@ turb ( list l next cost | current)
           costsofar r@ v@ +  ( list l next tcost | current)
           over costsofar swap v@  ( list l next tcost csf)
           dup 0=  >r ( list l next tcost csf  |current flg)
@@ -279,9 +279,6 @@ sqrts @ 4 / +vector: bestmove
 
 cityfile 2@ included
 
-\ trade from city
-: citytrade ;
-
 : tradereport
   0 ( tot)
   #cities times
@@ -312,7 +309,6 @@ cityfile 2@ included
 [[ cities 
 : onetrade ( city --)
   dup>r >sq @ pixelpathAll
-  [[ vectors tradevol clear ]]
   citystats
   begin (  prev |r: city)
     next ?dup while r@ (  next city )
@@ -334,10 +330,10 @@ cityfile 2@ included
 
 : .map
   height 0 do
-      width 0 do
-          i j xy@ . 
-      loop
-      cr
+    width 0 do
+      i j xy@ .
+    loop
+    cr
   loop
 ;
 

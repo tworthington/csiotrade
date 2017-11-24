@@ -15,6 +15,23 @@ wordlist: utils
 
 1 cells constant cell
 
+: xorshift ( n -- n2 )
+  dup 13 lshift xor
+  dup 17 rshift xor
+  dup  5 lshift xor ;
+
+
+variable (rnd)     \ seed
+2463534242 (rnd) ! \ initialize seed
+
+: rnd ( -- n )
+   (rnd) @ xorshift dup (rnd) ! ;
+
+: turb ( x sq -- x+0-2)
+  xorshift abs 3 mod +
+;
+
+
 : $delimit
   char parse   ( caddr len)
 ;

@@ -141,7 +141,7 @@ variable #terrains
 
 : prev-terrain #terrains @ 1- ;
 
-10 constant cheapest \ = 60miles per day=30"
+10 constant cheapest \ = 48miles per day=24"
 
 48 constant fastest
 
@@ -149,7 +149,8 @@ fastest cheapest * mapscale * constant 1day
 1day 24 / constant 1hr
 1day 7 * constant 1week
 
-: " ( n <name> -- ) cheapest fastest rot */ ( cost <name> )
+: " ( n <name> -- )
+  cheapest fastest rot */ ( cost <name> )
   +terrain
   prev-terrain ( cost index )
   self!
@@ -168,17 +169,17 @@ fastest cheapest * mapscale * constant 1day
 
 cheapest costs default
 
-\ These values are effectively 20 x the normal D&D move rates
+\ These values are effectively 2 x the normal D&D move rates
 +terrain impassible
 infinite impassible self!
 40 " opensea  \ slightly more risky, so avoid if possible
 18 " city
 48 " coastal
-16 " plains
- 6 " woods
+18 " plains
+ 9 " woods
 24 " roads
 12 " ltwoods
-12 " hills
+ 9 " hills
  6 " wdhills
  2 " mts
  1 " swamp
@@ -203,11 +204,14 @@ averages!
 1week river any>
 1week river >any
 
-1hr 4 * river ford cost!
-1hr 4 * ford river cost!
+1week swamp any>
+1week swamp >any
+
+1hr 6 * river ford cost!
+1hr 6 * ford river cost!
 
 1day city river cost!
-1day river city cost!
+1hr 4 * river city cost!
 
 river coastal avg
 river opensea avg
@@ -223,7 +227,6 @@ opensea swamp avg
 
 1day city coastal cost!
 1day city opensea cost!
-
 
 1hr roads plains cost!
 

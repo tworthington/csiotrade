@@ -109,7 +109,7 @@ variable (case)
 
 : tab 9 emit ;
 
-: ['] ' ; immediate
+: ['] ' lit ; immediate
 
 : .row ( addr -- )   dup .dword space
  dup rowlength + swap 

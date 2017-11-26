@@ -27,8 +27,8 @@ variable (rnd)     \ seed
 : rnd ( -- n )
    (rnd) @ xorshift dup (rnd) ! ;
 
-: turb ( x sq -- x+0-2)
-  xorshift abs 3 mod +
+: turb ( x sq -- x+0-10%)
+  xorshift abs 11 mod 100 + 100 */
 ;
 
 

@@ -232,8 +232,8 @@ sqrts @ 4 / +vector: bestmove
 ;
 
 : (trade) ( pop1 pop2 pathdist)
-  >r 4 mapscale */
-  r> */ ;
+  mapscale 
+  */ ;
 
 [[ cities
 : modifiers ( trade city1 city2 -- trade2)
@@ -391,7 +391,7 @@ variable scale
 
 : domain ( scale -- )
   mapsquares 0 do
-    costsofar i v@ dup if
+    costsofar i v@ dup if mapscale
       over / 
       255 swap - 1 max
     then
@@ -404,7 +404,7 @@ variable scale
   mapsquares 0 do
     255
       costsofar i v@
-      1day / 1+
+      mapscale 1day / 1+
     /
     emit
   loop
@@ -427,7 +427,8 @@ variable scale
   close
 ;
 
-: t csio daysmap ;
+: t lakenheath onetrade trademap
+ ;
 
 : globaltrademap alltrade trademap ;
 : citytrademap ( city ) onetrade trademap ;

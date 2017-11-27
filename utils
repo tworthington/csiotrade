@@ -84,6 +84,17 @@ variable (case)
     r> rsp!
 ;
 
+: /string ( caddr len cut)
+  2dup < if drop dup then
+  dup >r -
+  swap r> +
+  swap ;
+
+: $>s ( d caddr len -- d2 caddr2 len2)
+  over c@ [char] - = if 1 /string >number 2drop negate else
+    >number 2drop then d>s
+;
+
 : (2constant) ( addr -- a b ) 2@ ;
 
 : 2constant ( a b <name> -- ) create , , does> (2constant) ;

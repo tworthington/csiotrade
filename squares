@@ -129,8 +129,6 @@ variable #terrains
   swap r> -rot cost!
 ;
 
-: scale:: create , , does> 2@ */ ;
-
 : +terrain ( <name> -- )
   #terrains @ dup 256 = if abort" Too many terrains!" then
   save-input
@@ -145,12 +143,13 @@ variable #terrains
 
 48 constant fastest
 
-fastest cheapest * mapscale * constant 1day
+fastest cheapest * constant 1day
 1day 24 / constant 1hr
 1day 7 * constant 1week
 
 : " ( n <name> -- )
-  cheapest fastest rot */ ( cost <name> )
+\  cheapest fastest rot */ ( cost <name> )
+  1day swap /
   +terrain
   prev-terrain ( cost index )
   self!
@@ -195,20 +194,20 @@ infinite impassible self!
 
 averages!
 
-1week coastal any>
-1week coastal >any
+infinite coastal any>
+infinite coastal >any
 
-1week 2 * opensea any>
-1week 2 * opensea >any
+infinite opensea any>
+infinite opensea >any
 
-1week river any>
-1week river >any
+infinite river any>
+infinite river >any
 
-1week swamp any>
-1week swamp >any
+infinite swamp any>
+infinite swamp >any
 
-1hr 6 * river ford cost!
-1hr 6 * ford river cost!
+\ 1day river ford cost!
+\ 1day ford river cost!
 
 1day city river cost!
 1hr 4 * river city cost!

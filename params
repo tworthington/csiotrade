@@ -5,14 +5,32 @@ requires utils
 wordlist: params
 params first definitions
 
+: scale:: create 1 , 1 , does> 2@ */ ;
+
+: gcd    ( a b -- gcd)  ?dup  if  tuck  mod  recurse  then  ;
+
+: reduce ( n d -- n2 d2)
+  2dup gcd dup>r / swap r> / swap ;
+
+: setscale ( n d xt -- )
+  >r reduce r>
+  >pf @ 2! ;
+
+global{
+
+scale:: mapscale
+
+}global
+
 \ #arg1    2      3     4
 \ arg 0    1      2     3
 \ forth pixelpath map1 scale
 
 : default2 s" testmap.bmp" ;
 
-\ pixels per mile
-: default3 4 ;
+\ miles per pixel
+: default3 \ furlong default
+  16 8 ['] mapscale setscale ;
 
 : rindex ( caddr len char -- pos|-1)
   swap times ( caddr char)
@@ -34,7 +52,9 @@ params first definitions
 
 : arg3 ( -- n )
   #args 4 < if default3 else
-    0. 3 arg >number 2drop d>s
+    0. 3 arg $>s
+    dup 0< if abs 16 else 16 swap then
+    ['] mapscale setscale
   then
 ;
 
@@ -74,9 +94,8 @@ b+" .days.pgm" dayspgm
 
 mapname 2@ type
 
-arg3 constant mapscale
+arg3 
 
 }global
 
 set-current set-order
-

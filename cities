@@ -117,27 +117,9 @@ export{
   over @ ( head* new* oldhead)
   , over ! \ link field
   0 ,  \ zero trade field
+  dup #cities ,
   count++
 ;
-
-export{
-: city: (city)   settlement , ;
-
-: stronghold: (city) citadel , ;
-
-: thcity ( n -- city_n)
-  citystats @ swap
-  times
-    @ iterate ;
-
-}export
-
-: 0th citystats @ ;
-: 1st 1 thcity ;
-: 2nd 2 thcity ;
-: 3rd 3 thcity ;
-
-: >city ( i base ) swap thcity ;
 
 : field ( offset size <name> -- offset2)
   create over ,
@@ -160,6 +142,7 @@ export{
 {{
 cell:: >link
 cell:: >trade
+cell:: >id
 cell:: >type
 cell:: >sq
 cell:: >pop
@@ -172,8 +155,25 @@ cell:: >alignment
 alias:: >civ >lv
 alias:: >race >class
 
-
 : next ( item -- item2 | 0) >link @ ;
+
+: city: (city)   settlement , ;
+
+: stronghold: (city) citadel , ;
+
+: thcity ( n -- city_n)
+  dup citystats #cities u< -if abort" Therth no suth city, mate" then
+  citystats @ ( n city0)
+  begin
+    2dup >id @ <> while
+      next
+  repeat
+  nip
+;
+
+}export
+
+: >city ( i base ) swap thcity ;
 
 \ citystats foreach .city
 : foreach ( base <name> -- ? )
@@ -187,9 +187,11 @@ alias:: >race >class
   rdrop
 ;
 
+export{
 : .city ( base)
   dup>r
   >name count type cr
+  tab ." id:" r@ >id @ . cr
   tab ." Population: " r@ >pop @ . cr
   tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
   tab ." Trade:" r@ >trade @ . cr

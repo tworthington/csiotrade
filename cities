@@ -42,6 +42,26 @@ create aligntradetab
 dwarf elf gnome half-elf hobbit half-orc human
 gnoll goblin ogre orc balrog
 
+: .race ( n -- )
+  case
+    dwarf r= of ." Dwarf" endof
+    elf r= of ." Elf" endof
+    gnome r= of ." Gnome" endof
+    half-elf r= of ." Half Elven" endof
+    hobbit r= of ." Hobbit" endof
+    half-orc r= of ." Half Orc" endof
+    human r= of ." Human" endof
+    gnoll r= of ." Gnoll" endof
+    goblin r= of ." Goblin" endof
+    ogre r= of ." Ogre" endof
+    orc r= of ." Orc" endof
+    balrog r= of ." Balrog!" endof
+    ." Unknown"
+  endcase
+;
+
+
+
 100 constant p
 95 constant g
 86 constant t
@@ -71,26 +91,17 @@ h , f , h , f , n , g , t , n , g , n , g , p , \ ba balrog
 
 : racetrade ( trade r1 r2 -- trade2) 2dup race@ -rot race@ * 10000 */ ;
 
-: .race ( n -- )
-  case
-    r@ human = of ." Human" endof
-    r@ elf = of ." Elf" endof
-    r@ hobbit = of ." Hobbit" endof
-    r@ dwarf = of ." Dwarf" endof
-  endcase
-;
-
 : .align
   case
-    r@ N = of ." Neutral" endof
-    r@ LG = of ." Lawful Good" endof
-    r@ NG = of ." Neutral Good" endof
-    r@ CG = of ." Chaotic Good" endof
-    r@ CN = of ." Chaotic Neutral" endof
-    r@ CE = of ." Chaotic Evil" endof
-    r@ NE = of ." Neutral Evil" endof
-    r@ LE = of ." Lawful Evil" endof
-    r@ LN = of ." Lawful Neutral" endof
+    N r= of ." Neutral" endof
+    LG r= of ." Lawful Good" endof
+    NG r= of ." Neutral Good" endof
+    CG r= of ." Chaotic Good" endof
+    CN r= of ." Chaotic Neutral" endof
+    CE r= of ." Chaotic Evil" endof
+    NE r= of ." Neutral Evil" endof
+    LE r= of ." Lawful Evil" endof
+    LN r= of ." Lawful Neutral" endof
   endcase
 ;
 

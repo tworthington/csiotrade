@@ -4,6 +4,15 @@ wordlist: cities
 
 get-current
 cities first definitions
+
+create (offset) 0 ,
+
+: offset! ( x y -- ) xy>sq (offset) ! ;
+
+: >sq, ( x y -- )
+  xy>sq  (offset) @ + , ;
+
+
 \ (link) (trade) x y pop name ( civ/lv race/class alignment ) city/cit
 
 \ city: bier 978 1001 >sq, 170 , 3 , human , CG , ," Bier"
@@ -176,7 +185,7 @@ alias:: >race >class
 : stronghold: (city) citadel , ;
 
 : thcity ( n -- city_n)
-  dup citystats #cities u< -if abort" Therth no suth city, mate" then
+  dup citystats #cities u< -if abort" Theres no such city, mate" then
   citystats @ ( n city0)
   begin
     2dup >id @ <> while

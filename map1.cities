@@ -1,4 +1,7 @@
 [[ cities
+
+0 0 offset!
+
 \ (link) (trade) (type) xy pop name  civ/lv race/class alignment  city/cit
 \     name    x  y    pop       civ  race  align printName
 city: csio 887 907 >sq, 20000 , 8 , human , N , ," CSIO"

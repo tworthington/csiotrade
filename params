@@ -19,6 +19,7 @@ params first definitions
 global{
 
 scale:: mapscale
+scale:: /mapscale
 
 }global
 
@@ -30,7 +31,9 @@ scale:: mapscale
 
 \ miles per pixel
 : default3 \ furlong default
-  16 8 ['] mapscale setscale ;
+  8 1 ['] mapscale setscale
+  1 8 ['] /mapscale setscale
+;
 
 : rindex ( caddr len char -- pos|-1)
   swap times ( caddr char)
@@ -53,8 +56,9 @@ scale:: mapscale
 : arg3 ( -- n )
   #args 4 < if default3 else
     0. 3 arg $>s
-    dup 0< if abs 16 else 16 swap then
-    ['] mapscale setscale
+    dup 0< if abs 1 swap 8 *  else 8   then
+    2dup ['] /mapscale setscale
+    swap ['] mapscale setscale
   then
 ;
 

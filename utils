@@ -31,10 +31,14 @@ variable (rnd)     \ seed
   xorshift abs 11 mod 100 + 100 */
 ;
 
-
 : $delimit
   char parse   ( caddr len)
 ;
+
+: [$delimit]
+  $delimit   state @ if postpone 2literal then ; immediate
+
+: 10^ ( x -- 10^x) 1 swap 0 do 10 * loop ;
 
 variable (case)
 : case postpone >r 0 (case) ! ; immediate

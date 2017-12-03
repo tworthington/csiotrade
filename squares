@@ -86,6 +86,51 @@ variable #terrains
   4 drops
 ; 
 
+: (rowmax) ( row^ sz -- maxx max )
+  over @ 0 swap 2>r ( row^ sz |r: maxx max )
+  begin
+    1- ( row^ x |r: maxx max )
+    2dup cells+ @
+    dup r@ > if ( row^ x newmax |r: maxx oldmax)
+      rdrop rdrop ( maxrow^ x newmax)
+      2dup 2>r
+    then
+    drop
+    ?dup while
+  repeat
+  drop 2r>
+;
+
+: preprow ( y table -- rowaddr sz) 
+  dup @ rot ( addr sz y )
+  2dup < if abort" non-existant row" then
+  over >r
+  * 1+ cells+ r> ( rowaddr sz)
+;
+
+
+: rowmax ( y table -- maxx max)
+  preprow
+  (rowmax)
+;
+
+: >row ( y table -- rowaddr)
+  @+  ( y sz tabledata )
+  -rot
+  * cells+ ;
+
+: .row ( y table -- )
+  dup @ rot over >r * 1+ cells + r>
+  0 do i . @+ swap . space loop drop cr ;
+
+: rowsum ( y table -- t)
+  preprow ( rowaddr sz)
+  0 -rot
+  times ( t addr)
+    @+ >r + r>
+  iterate
+  drop
+;
 
 256 xtable costs
 
@@ -98,7 +143,7 @@ variable #terrains
 : self! ( n x -- ) dup costs xy! ;
 : self@ ( x -- ) dup costs xy@ ;
 
-\ set cost from terrain y to any OTHER to n
+\ set cost from terrain y to any OTHER terrain to n
 : any> ( n y -- )
   dup dup self@ ( n y y c)
   2>r ( n y |r: y c)
@@ -143,13 +188,14 @@ variable #terrains
 
 48 constant fastest
 
-fastest cheapest * constant 1day
+3840 constant 1day
 1day 24 / constant 1hr
 1day 7 * constant 1week
+1day 30 * constant 1month
 
 : " ( n <name> -- )
-\  cheapest fastest rot */ ( cost <name> )
-  1day swap /
+  cheapest fastest rot */ mapscale ( cost <name> )
+\  1day swap /
   +terrain
   prev-terrain ( cost index )
   self!
@@ -180,7 +226,7 @@ infinite impassible self!
 12 " ltwoods
  9 " hills
  6 " wdhills
- 2 " mts
+ 1 " mts
  1 " swamp
  6 " desert
  4 " scrub
@@ -194,20 +240,20 @@ infinite impassible self!
 
 averages!
 
-infinite coastal any>
-infinite coastal >any
+1month coastal any>
+1month coastal >any
 
-infinite opensea any>
-infinite opensea >any
+1week 2 * opensea any>
+1week 2 * opensea >any
 
-infinite river any>
-infinite river >any
+1month river any>
+1month river >any
 
-infinite swamp any>
-infinite swamp >any
+\ 1month swamp any>
+\ 1month swamp >any
 
-\ 1day river ford cost!
-\ 1day ford river cost!
+1week river ford cost!
+1week ford river cost!
 
 1day city river cost!
 1hr 4 * river city cost!
@@ -217,9 +263,9 @@ river opensea avg
 
 coastal opensea avg
 
-river swamp avg
-coastal swamp avg
-opensea swamp avg
+\ river swamp avg
+\ coastal swamp avg
+\ opensea swamp avg
 
 1hr 6 * coastal city cost!
 1hr 6 * opensea city cost!

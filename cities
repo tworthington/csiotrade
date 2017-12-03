@@ -161,6 +161,9 @@ cell:: >civ
 cell:: >race
 cell:: >alignment
 2 cells:: >name
+
+: >wealth@ dup >trade @ swap >pop @ / ;
+
 }}
 
 alias:: >civ >lv
@@ -205,7 +208,8 @@ export{
   tab ." id:" r@ >id @ . cr
   tab ." Population: " r@ >pop @ . cr
   tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
-  tab ." Trade:" r@ >trade @ . cr
+  tab ." Trade: " r@ >trade @ dup . cr
+  tab ." Wealth " r@ >pop @  / . cr
   tab ." Civilisation: " r@ >civ @ . cr
   tab ." Race: " r@ >race @ .race cr
   tab ." Align: " r> >alignment @ .align cr

@@ -248,3 +248,70 @@ variable (case)
 
 1 cells constant 1cell
 2 cells constant 2cell
+
+1488522236 constant inv_log2
+
+8 constant p
+1 p lshift constant 1<<p
+2 p lshift constant 2<<p
+1 p 1- lshift constant b1
+
+: rshift dup 31 > if 2drop 0 else rshift then ;
+
+: drshift ( nh nl s -- xh xl)
+  tuck rshift ( nh s xla)
+  >r
+  1 over lshift 1- ( nh s mask |: xla )
+  2 pick and ( nh s clipped | xla )
+  >r
+  tuck rshift ( s xh | xla clipped)
+  32 rot - ( xh s2 | xla clipped)
+  r> swap lshift r> or
+;
+
+: fixy ( x y -- x' y')
+  begin
+    over 2<<p < not while
+    1<<p + swap 1 rshift
+  repeat
+;
+
+\ z=x
+: fixz ( z y -- )
+  swap ( y z )
+  b1
+  p times
+    ( y z b)
+    >r
+    dup m* p drshift d>s ( y z'|b)
+    dup 2<<p  ( y z' z 2p')
+    < not if 1 rshift swap r@ + swap then
+    r> 1 rshift
+    iterate
+    2drop
+;
+
+: fixx ( x -- x' y')
+  0 ( x y )
+  begin
+    over 1<<p < while
+    1<<p - swap 2* swap
+  repeat
+;
+
+: log2fix ( x -- x)
+  p lshift
+  fixx (  x' y')
+  fixy ( x' y )
+  fixz ( y)
+;
+
+\ 8 bits of precision
+: logfix ( x  -- log2n)
+  log2fix inv_log2 m*
+  31 drshift
+;
+
+: t 1024 logfix ;
+
+: .s u.s ;

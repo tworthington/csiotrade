@@ -1,0 +1,219 @@
+wordlist: analysis
+
+analysis first
+
+definitions
+
+: tradereport
+  0 ( tot)
+  #cities times
+    i thcity >name count type ."  Trade: " tab
+    i thcity >trade @ 
+    dup . ." (" dup i thcity >pop @ / . ."  per person)" tab ." via: "
+    tradevol i thcity >sq @ v@ dup . ." ("  i thcity >pop @ / . ."  per person)"
+    cr
+    + 
+  iterate ." Total trade: " .
+;
+
+: alltrade
+  #cities times
+    i if
+      i thcity >sq @ pixelpathAll
+      i times
+        i j <> if
+          ." From " i thcity dup >name count type tab
+          ." to " j thcity dup >name count type tab
+          traderoute
+          dup i j tradetable xy!
+          dup j i tradetable xy!
+          dup i thcity >trade +! j thcity >trade +!
+        then
+      iterate
+    then
+  iterate
+;
+
+[[ cities 
+: onetrade ( city --)
+  dup>r >sq @ pixelpathAll
+  citystats
+  begin (  prev |r: city)
+    next ?dup while r@ (  next city )
+      2dup <> if
+        ." From " >name count type tab
+          ." to " dup >name count type tab ( next )
+        dup r@
+        traderoute ( next vol)
+        2dup swap >id @ r@ >id @ tradetable xy!
+        2dup swap >id @ r@ >id @ swap tradetable xy!       
+        dup r@ >trade +!
+        over >trade +!
+        else drop
+      then
+    repeat
+    rdrop
+;
+]]
+
+: .trade ( x y -- v ) xy>sq tradevol swap v@ . ;
+
+variable scale
+
+: calibrate ( vector -- )
+  [[ vectors    
+  maximum 2sqrt
+  scale !
+  ]]
+;
+
+: open> ( caddr len -- handle)
+  2dup type cr
+  drop 438 swap 2 8 linux
+  dup 0= throw
+;
+  
+: process ( vector -- )
+    mapsquares 0 do
+      dup i v@ dup if  2sqrt 255 scale @ */ 1 max
+      then emit
+    loop
+    drop
+;
+
+: header
+    ." P5 "
+    width . height . 255 .
+;
+
+: startfile ( handle --)
+    15 user !
+    header
+;
+
+: output ( handle vector -- )
+    swap
+    startfile
+    process
+;
+
+: close
+    15 user @
+    1 6 linux throw 
+    1 15 user ! ;
+
+: trademap
+    tradevol calibrate
+    tradepgm 2@ open>
+    tradevol output
+    close
+;
+
+: domain ( scale -- )
+  mapsquares 0 do
+    costsofar i v@ dup if mapscale
+      over / 
+      255 swap - 1 max
+    then
+    emit
+  loop
+  drop
+;
+
+: days ( -- )
+  mapsquares 0 do
+    255
+      costsofar i v@
+      mapscale 1day / 1+
+    /
+    emit
+  loop
+;
+
+: daysmap ( city )
+  >sq @ pixelpathAll
+    dayspgm 2@ open>
+    startfile
+    days
+    close
+;
+
+: domainmap ( city )
+  dup
+  >sq @ pixelpathAll
+  domainpgm 2@ open>
+  startfile
+  >pop @ 2sqrt 1 max domain
+  close
+;
+
+: globaltrademap
+  ns startns 2!
+  alltrade trademap
+  ns endns 2!
+  startns 2@
+  endns 2@
+  ." Time: "  ns- .ns cr
+;
+
+: citytrademap ( city ) onetrade trademap ;
+
+: main ( cityid -- ) thcity dup >name count type tab >id @ tradetable rowmax drop thcity >name count type ;
+
+: rep #cities times i main cr iterate ;
+
+\ city trade report
+: ctrep ( city -- ) >id @ tradetable >row
+  #cities 0 do @+ swap ?dup if i thcity  >name count type tab  . cr then loop drop ;
+
+1 constant ctdecimals
+
+ctdecimals 2 + 10^ constant tradeprec%
+
+: (%%d.) <# ctdecimals times # iterate [char] . hold #s #> type space ;
+
+: .%% ( tot val -- )
+  s>d rot ( vh vl tot)
+  tradeprec% swap m*/rem drop (%%d.)
+;
+
+: ctrep% ( city -- )
+  >id @ tradetable 2dup rowsum
+  -rot ( total id tab )
+  >row ( total addr )
+  #cities 0 do ( total addr)
+    @+ ( total v addr2 )
+    -rot ( addr tot v )
+    over tradeprec% / over <
+    if
+      i thcity  >name count type tab
+      2dup .%% cr
+    then ( addr tot v)
+    drop swap
+  loop 2drop ;
+
+: rep ( city )  dup .city ctrep% ;
+
+
+\ ( tabaddr -- )
+: savetable" [char] " parse open> 15 user ! @+ swap dup * cells type close ;
+: read ( addr len handle -- bytes) >r swap r> 3 3 linux ;
+
+: (fixup)
+  #cities times
+    i tradetable rowsum  i thcity >trade !
+  iterate
+;
+
+: loadtable" ( tab-addr -- ) @+ swap dup * cells <file" dup>r read 1 < if abort" Table read failed" then r> 1 6 linux throw (fixup) ;
+
+\ s" some code to be performed for each city" domac
+: domac ( caddr len -- ??? )
+  2>r
+[[ cities  citystats ]] begin
+    next ?dup while
+      2r@ evaluate
+  repeat
+  2r> 2drop ;
+
+: restore [$delimit] "tradetable  loadtable\" map1-trade.bin\"" evaluate ;

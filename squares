@@ -217,7 +217,7 @@ cheapest costs default
 \ These values are effectively 2 x the normal D&D move rates
 +terrain impassible
 infinite impassible self!
-40 " opensea  \ slightly more risky, so avoid if possible
+32 " opensea  \ slightly more risky, so avoid if possible
 18 " city
 48 " coastal
 18 " plains

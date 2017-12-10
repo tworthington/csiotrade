@@ -1,0 +1,17 @@
+#+TITLE: Mapping of Trade Routes
+#+SUBTITLE: Worked Example: The City State of the Invincible Overlord
+This is the Forth code to take a map in .bmp format and analyse it for trade routes. Although it has features for fantasy D&D maps, it could be used without referencing them. The core is a Reilly gravitational model
+
+It is invoked by 
+
+#+BEGIN_SRC bash
+forth pixelpath map1.bmp 8
+#+END_SRC
+Where "map1.bmp" is the map to analyse and "8" is the number of pixels per mile (if negative it's the number of miles per pixel). It assumes that for a map file called xxx.bmp there is a forth source file called xxx.cities which defines demographics for that map (i.e., the towns, locations and their populations).
+
+* Notes
+** Forth
+This code is written for my own Forth compiler. You'll need to adapt the file handling somewhat and define a loop structure (n times...iterate) which counts down from n-1 to 0. Neither are particularly hard.
+
+** TODO Make multi-threaded
+The map given here takes 5hrs to analyse using a single thread on a 3.600GHz AMD processor using native code-generation, albeit with few optimisations. Threading is doable but not done.

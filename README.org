@@ -14,4 +14,7 @@ Where "map1.bmp" is the map to analyse and "8" is the number of pixels per mile 
 This code is written for my own Forth compiler. You'll need to adapt the file handling somewhat and define a loop structure (n times...iterate) which counts down from n-1 to 0. Neither are particularly hard.
 
 ** TODO Make multi-threaded
-The map given here takes 5hrs to analyse using a single thread on a 3.600GHz AMD processor using native code-generation, albeit with few optimisations. Threading is doable but not done.
+The map given here takes 5hrs to analyse using a single thread on a 3.6GHz AMD processor using native code-generation, albeit with few optimisations. Threading is doable but not done.
+
+** Blog
+There is a [[http://nagorascorner.blogspot.co.uk/2017/12/licstart-following-is-entire-license.html][blog post about this]].

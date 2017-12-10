@@ -217,3 +217,10 @@ ctdecimals 2 + 10^ constant tradeprec%
   2r> 2drop ;
 
 : restore [$delimit] "tradetable  loadtable\" map1-trade.bin\"" evaluate ;
+
+: redirect" ( xt <filename>" -- ? )
+  15 user @ >r  \ save output handle
+  [char] " parse open> 15 user !
+  execute
+  close
+  r> 15 user ! ;

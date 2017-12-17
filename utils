@@ -72,6 +72,9 @@ variable (case)
     tuck !
 ;
 
+: free ( addr -- )
+  dup @ swap 2 91 linux throw ;
+
 : mem  ( size <name> -- addr)
     create
     allocate

@@ -66,12 +66,6 @@ variable scale
   scale !
   ]]
 ;
-
-: open> ( caddr len -- handle)
-  2dup type cr
-  drop 438 swap 2 8 linux
-  dup 0= throw
-;
   
 : process ( vector -- )
     mapsquares 0 do
@@ -87,7 +81,7 @@ variable scale
 ;
 
 : startfile ( handle --)
-    15 user !
+    OUTPUT !
     header
 ;
 
@@ -97,16 +91,11 @@ variable scale
     process
 ;
 
-: close
-    15 user @
-    1 6 linux throw 
-    1 15 user ! ;
-
 : trademap
     tradevol calibrate
-    tradepgm 2@ open>
+    tradepgm open>
     tradevol output
-    close
+    close>
 ;
 
 : domain ( scale -- )
@@ -132,7 +121,7 @@ variable scale
 
 : daysmap ( city )
   >sq @ pixelpathAll
-    dayspgm 2@ open>
+    dayspgm open>
     startfile
     days
     close
@@ -141,7 +130,7 @@ variable scale
 : domainmap ( city )
   dup
   >sq @ pixelpathAll
-  domainpgm 2@ open>
+  domainpgm open>
   startfile
   >pop @ 2sqrt 1 max domain
   close
@@ -194,18 +183,11 @@ ctdecimals 2 + 10^ constant tradeprec%
 
 : rep ( city )  dup .city ctrep% ;
 
-
-\ ( tabaddr -- )
-: savetable" [char] " parse open> 15 user ! @+ swap dup * cells type close ;
-: read ( addr len handle -- bytes) >r swap r> 3 3 linux ;
-
 : (fixup)
   #cities times
     i tradetable rowsum  i thcity >trade !
   iterate
 ;
-
-: loadtable" ( tab-addr -- ) @+ swap dup * cells <file" dup>r read 1 < if abort" Table read failed" then r> 1 6 linux throw (fixup) ;
 
 \ s" some code to be performed for each city" domac
 : domac ( caddr len -- ??? )
@@ -216,11 +198,13 @@ ctdecimals 2 + 10^ constant tradeprec%
   repeat
   2r> 2drop ;
 
-: restore [$delimit] "tradetable  loadtable\" map1-trade.bin\"" evaluate ;
+\ readback the ci
+: restore
+  tradevolfile tradevol loadtable
+  citytradefile tradetable loadxtable
+  (fixup)
+;
 
-: redirect" ( xt <filename>" -- ? )
-  15 user @ >r  \ save output handle
-  [char] " parse open> 15 user !
-  execute
-  close
-  r> 15 user ! ;
+: backup
+  tradevol count tradevolfile filedump
+  tradetable count dup * cells citytradefile filedump ;

@@ -3,54 +3,34 @@ requires utils
 digression l+ "lists"
 digression v! "vectors"
 
-
 wordlist: mapmaking
 mapmaking first definitions
-
-: (<$file) ( 0 0 caddr len -- handl)
-  open dup 0= throw
-;
-
-: <$file ( caddr len -- handle)
-  0 0 2swap
-  (<$file)
-;    
-
-: <file" ( <name>" -- handle)
-  0 0 [char] " parse
-  (<$file)
-;    
-
-: fsize ( hdle -- size)
-    pad swap 2 108 linux throw \ fstat
-    pad 20 + @
-;
 
 : mmaphandle ( hdle -- addr)
     dup fsize ( hndl size)
     >r >r
-    0 r> 2 3 r> 0 6 192 linux (linerr) \ mmap2    
+    0 r> 2 3 r> 0 6 192 linux (linerr) \ mmap2
 ;
 
-: map&close ( hdle -- addr)
+: map&close ( hdle -- addr)  
   dup mmaphandle ( hdle addr)
-  swap close
+  swap close 
 ;
 
 \ get the width and height and start addr of data
 : mmapfile" ( filename" -- addr)
-  <file" ( hdle)
-  map&close
+  <open" ( hdle) 
+  map&close 
 ;
 
 : mmapname ( caddr len -- addr)
-  <$file
+  <open
   map&close
 ;
 
 \ load the map
 
-mapname 2@ mmapname
+mapname mmapname
 
 constant raw
 \ Constants, so extract directly from data

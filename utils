@@ -53,7 +53,7 @@ variable (case)
 : digression ( <word> <char>file<char> -- )
   bl word find nip
   $delimit     ( flag caddr len)
-  rot if  2drop  else included then
+  rot if  2drop  else  included  then
 ;
 
 : (linerr)
@@ -123,8 +123,6 @@ variable (case)
 : spaces times space iterate ;
 
 : tab 9 emit ;
-
-: ['] ' lit ; immediate
 
 : .row ( addr -- )   dup .dword space
  dup rowlength + swap 
@@ -219,6 +217,83 @@ variable (case)
 : ?break
     key 27 = if abort" Break" then
 ;   
+
+15 user constant OUTPUT
+15 user constant INPUT
+
+\ open out
+: open> ( caddr len -- handle)
+  2dup type cr
+  drop 438 swap 2 8 linux
+  dup 0= throw
+;
+
+: <read ( addr len1 hdl -- len2)
+  14 user @ >r
+  14 user ! accept
+  r> 14 user ! ;
+
+\ open for read-only
+: <open ( caddr len -- handle)
+  0 0 2swap open ;
+
+\ read/write
+: <open> ( caddr len -- handle)
+  3 0 2swap open ;
+
+: <open" [char] " parse <open ;
+
+: fsize ( hdle -- size)
+    here swap 2 108 linux throw \ fstat
+    here 20 + @
+;
+
+\ close output
+: close>
+  OUTPUT @
+  close
+  1 OUTPUT ! ;
+
+: redirect ( xt caddr len -- ?)
+  open> OUTPUT !
+  execute
+  close>
+;
+
+\ do xt with STDOUT redirected to filename
+: redirect" ( xt <filename>" -- ? )
+  OUTPUT @ >r  \ save output handle
+  [char] " parse
+  redirect
+  r> OUTPUT ! ;
+
+: filedump ( caddr len filename len -- )
+  ['] type -rot redirect ;
+
+: save ( caddr len caddr len -- ) ['] type -rot redirect ;
+
+: saveas" ( caddr len <filename>" ) [char] " parse save ;
+
+
+: savetable" ( tabaddr -- ) @+ swap dup * cells saveas" ;
+
+: (loadtable) ( filename len table^ size -- )
+  2swap <open dup>r <read drop r> close ;
+
+\ assumes table has a count cell holding cells
+: loadcelltable ( filename len table -- )
+  count cells (loadtable) ;
+
+\ assumes table has a count cell holding one of 2 axis as a cell count
+: loadxtable count dup * cells (loadtable) ;
+
+\ assumes table has a count cell holding bytes
+: loadtable ( filename len table -- )
+  count (loadtable)
+;
+
+: loadtable" ( tab-addr -- ) count dup * cells <open" dup>r <read
+  1 < if abort" Table read failed" then r> close throw  ;
 
 \ nanoseconds
 : ns  here 0 2 265 linux throw here 2@ swap ;

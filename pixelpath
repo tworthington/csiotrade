@@ -11,14 +11,11 @@ digression params "params"
 
 digression lists "lists"
 
-\ lists last
 order
 digression pqueues "pqueue"
 
-\ pqueues last
 order
 digression mapmaking "bmpread"
-\ mapmaking first
 
 order
 requires squares
@@ -248,7 +245,7 @@ sqrts @ 4 / +vector: bestmove
   >race @ racetrade
 ;
 ]]
-  
+
 : trade (  pop1 pop2 fromsq -- m )
   cost ( p1 p2 distance)
   (trade)
@@ -277,7 +274,7 @@ sqrts @ 4 / +vector: bestmove
   then
 ;
 
-cityfile 2@ included
+cityfile included
 
 #cities xtable tradetable
 

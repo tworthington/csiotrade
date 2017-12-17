@@ -81,6 +81,7 @@ global{
   >r 2dup r@ swap zmove ( caddr len |: loc)
   nip r> swap
   create , ,
+  does> 2@
 ;
 
 : .$ ( addr -- ) 2@ type ;
@@ -95,8 +96,10 @@ b+" .cities" cityfile
 b+" .trade.pgm" tradepgm
 b+" .domain.pgm" domainpgm
 b+" .days.pgm" dayspgm
+b+" .tradevol.bin" tradevolfile
+b+" .cities.bin" citytradefile
 
-mapname 2@ type
+mapname type
 
 arg3 
 

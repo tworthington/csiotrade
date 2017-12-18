@@ -66,10 +66,6 @@ get-current definitions
     r> 1+ l,
 ;
 
-: join ( [list1] l1 [list2] l2 -- [list3] l3)
-    dup 1+ roll +
-;
-
 export{
 
 : .s depth .list drop  ;

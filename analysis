@@ -124,7 +124,7 @@ variable scale
 ;
 
 mapsquares cells allocate constant (domainmap)
-(domainmap) count cells 0 fill
+(domainmap) count erase
 
 : power@ ( city square -- val)
   over
@@ -161,7 +161,7 @@ mapsquares cells allocate constant (domainmap)
     ldup 
     i strongest ( list n city)
     dup if
-      >id  @
+      >id  @ 1+ 2*
     else
       drop 255
     then
@@ -177,6 +177,15 @@ mapsquares cells allocate constant (domainmap)
   startfile
   (domainmap) count /cells times @+ swap emit iterate drop
   close> ;
+
+: domainmap
+\  goblin racecities ldup ['] domain foreach
+  goblin racecities domains
+  domainpgm open>
+  startfile
+  (domainmap) count /cells times @+ swap emit iterate drop
+  close> ;
+
 ]]
 
 

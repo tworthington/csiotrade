@@ -290,7 +290,7 @@ infinite impassible any>
   cr
 ;
 
-.costs
+\ .costs
 
 : orthogcost ( from to -- cost)
   sq@ swap sq@ swap

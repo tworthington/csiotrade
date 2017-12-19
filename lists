@@ -49,7 +49,7 @@ get-current definitions
     begin index ?dup while roll drop 1- repeat
 ;
 
-: ldup dup>r dup times i pick iterate r> ;
+: ldup ?dup if dup dup times dup 1+ pick swap iterate then ;
 
 : foreach ( list n xt -- )
     swap times  tuck execute  iterate drop ;

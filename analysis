@@ -98,17 +98,6 @@ variable scale
     close>
 ;
 
-: domain ( scale -- )
-  mapsquares 0 do
-    costsofar i v@ dup if mapscale
-      over / 
-      255 swap - 1 max
-    then
-    emit
-  loop
-  drop
-;
-
 : days ( -- )
   mapsquares 0 do
     255
@@ -121,20 +110,72 @@ variable scale
 
 : daysmap ( city )
   >sq @ pixelpathAll
-    dayspgm open>
-    startfile
-    days
-    close
+  dayspgm open>
+  startfile
+  days
+  close>
 ;
 
-: domainmap ( city )
+: domain ( city )
   dup
-  >sq @ pixelpathAll
+  >sq @ pixelpathAll ( city)
+  costsofar cell+
+  swap >domainmap @ count move
+;
+
+mapsquares cells allocate constant (domainmap)
+
+: power@ ( city square -- val)
+  over
+  >domainmap @  ( city sq domainvec)
+  swap v@ ( city distance) 
+  over >civ @ 1+  ( city distance civ) 
+  rot >pop @ ( dist civ pop)
+  rot 1 max
+  */
+;
+
+: stronger ( city0 city1 square -- city)
+  >r 2dup
+  r@ power@
+  swap r> power@ ( city0 city1 power1 power0)
+  > if nip else drop then
+;
+
+: strongest ( list n square -- city)
+  over
+  0 = if abort" Can't find strongest city in empty list!" then
+  over 1 = if 2drop exit then
+  swap 1-
+  times ( list sq)
+    dup>r
+    stronger r>
+  iterate
+  drop 
+;
+
+[[ lists
+: domains ( citylist n -- )
+  mapsquares 0 do
+    ldup 
+    i strongest ( list n city)
+    dup if
+      >id  @
+    then
+    (domainmap) i  v!
+  loop
+  drops
+;
+
+: domainmap
+  \  goblin racecities ldup ['] domain foreach
+  allcities domains
   domainpgm open>
   startfile
-  >pop @ 2sqrt 1 max domain
-  close
-;
+  (domainmap) count /cells times @+ swap emit iterate drop
+  close> ;
+]]
+
 
 : globaltrademap
   ns startns 2!
@@ -192,7 +233,7 @@ ctdecimals 2 + 10^ constant tradeprec%
 \ s" some code to be performed for each city" domac
 : domac ( caddr len -- ??? )
   2>r
-[[ cities  citystats ]] begin
+  [[ cities  citystats ]] begin ( city )
     next ?dup while
       2r@ evaluate
   repeat
@@ -208,3 +249,6 @@ ctdecimals 2 + 10^ constant tradeprec%
 : backup
   tradevol count tradevolfile filedump
   tradetable count dup * cells citytradefile filedump ;
+
+: ta allcities times domain iterate  ;
+: t2 warwick domain csio domain ;

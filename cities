@@ -47,9 +47,11 @@ create aligntradetab
   
 : techtrade ( trade t1 t2 -- trade2) + 1+ * ;
 
+export{
 12 enums:
 dwarf elf gnome half-elf hobbit half-orc human
 gnoll goblin ogre orc balrog
+}export
 
 : .race ( n -- )
   case
@@ -68,8 +70,6 @@ gnoll goblin ogre orc balrog
     ." Unknown"
   endcase
 ;
-
-
 
 100 constant p
 95 constant g
@@ -137,6 +137,7 @@ export{
   over @ ( head* new* oldhead)
   , over ! \ link field
   0 ,  \ zero trade field
+  mapsquares cells allocate ,  \ holder for domainmap
   dup #cities ,
   count++
 ;
@@ -162,6 +163,7 @@ export{
 {{
 cell:: >link
 cell:: >trade
+cell:: >domainmap
 cell:: >id
 cell:: >type
 cell:: >sq
@@ -212,19 +214,50 @@ alias:: >race >class
 
 export{
 : .city ( base)
-  dup>r
-  >name count type cr
-  tab ." id:" r@ >id @ . cr
-  tab ." Population: " r@ >pop @ . cr
-  tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
-  tab ." Trade: " r@ >trade @ dup . cr
-  tab ." Wealth " r@ >pop @  / . cr
-  tab ." Civilisation: " r@ >civ @ . cr
-  tab ." Race: " r@ >race @ .race cr
-  tab ." Align: " r> >alignment @ .align cr
+  ?dup if
+    dup>r
+    >name count type cr
+    tab ." id:" r@ >id @ . cr
+    tab ." Population: " r@ >pop @ . cr
+    tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
+    tab ." Trade: " r@ >trade @ dup . cr
+    tab ." Wealth " r@ >pop @  / . cr
+    tab ." Civilisation: " r@ >civ @ . cr
+    tab ." Race: " r@ >race @ .race cr
+    tab ." Align: " r> >alignment @ .align cr
+  else
+    ." Null city" cr
+  then
 ;
 
 : #cities citystats #cities ;
+
+: filter: ( fieldxt testval <name> --  )
+   create , ,
+does> ( city this -- city| )
+  over swap
+  2@ >r execute @
+  r> <> if drop then
+;
+
+' >race goblin filter: isgoblin
+' >race human filter: ishuman
+
+: allcities
+  depth >r
+  #cities times i thcity iterate
+  depth r> - 
+;
+
+: racecities ( race)
+  depth >r
+  #cities times ( race )
+    i thcity 2dup >race @ <> if drop else swap then
+  iterate
+  depth r> - nip
+;
+
+
 
 }export
 

@@ -327,6 +327,8 @@ variable (case)
 1 cells constant 1cell
 2 cells constant 2cell
 
+: /cells 1cell / ;
+
 1488522236 constant inv_log2
 
 8 constant p

@@ -162,32 +162,22 @@ mapsquares cells allocate constant (domainmap)
     i strongest ( list n city)
     dup if
       >id  @ 1+ 2*
-    else
-      drop 255
+      (domainmap) i  v!
     then
-    (domainmap) i  v!
   loop
   drops
 ;
 
-: domainmap
-  goblin racecities ldup ['] domain foreach
-\  allcities domains
-  domainpgm open>
-  startfile
-  (domainmap) count /cells times @+ swap emit iterate drop
-  close> ;
 
-: domainmap
-\  goblin racecities ldup ['] domain foreach
-  goblin racecities domains
+: domainmap ( citylist -- )
+  ldup ['] domain foreach
+  domains
   domainpgm open>
   startfile
   (domainmap) count /cells times @+ swap emit iterate drop
   close> ;
 
 ]]
-
 
 : globaltrademap
   ns startns 2!
@@ -262,5 +252,5 @@ ctdecimals 2 + 10^ constant tradeprec%
   tradevol count tradevolfile filedump
   tradetable count dup * cells citytradefile filedump ;
 
-: ta allcities times domain iterate  ;
-: t2 warwick domain csio domain ;
+: ta allcities domainmap  ;
+: t2 warwick  csio 2  domainmap ;

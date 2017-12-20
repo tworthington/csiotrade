@@ -249,7 +249,8 @@ does> ( city this -- city| )
   depth r> - 
 ;
 
-: racecities ( race)
+\ e.g., human settlements
+: settlements ( race)
   depth >r
   #cities times ( race )
     i thcity 2dup >race @ <> if drop else swap then

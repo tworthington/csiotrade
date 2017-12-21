@@ -1,5 +1,7 @@
 wordlist: utils
 
+50000000 expand drop
+
 : ]+
   ] lit
   postpone +

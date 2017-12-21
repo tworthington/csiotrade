@@ -124,22 +124,26 @@ variable scale
 ;
 
 mapsquares cells allocate constant (domainmap)
-(domainmap) count erase
+
+: -domainmap (domainmap) count erase ;
+
+-domainmap
 
 : power@ ( city square -- val)
   over
   >domainmap @  ( city sq domainvec)
-  swap v@ ( city distance) 
-  over >civ @ 1+  ( city distance civ) 
+  swap v@ ( city distance)
+  over >civ @ 1+  ( city distance civ)
   rot >pop @ ( dist civ pop)
   rot 1 max
   */
 ;
 
-: stronger ( city0 city1 square -- city)
+: stronger ( city0 city1 square -- city )
   >r 2dup
   r@ power@
   swap r> power@ ( city0 city1 power1 power0)
+  2dup = if 2drop rnd rnd then \ pick a random city if tied
   > if nip else drop then
 ;
 
@@ -156,14 +160,15 @@ mapsquares cells allocate constant (domainmap)
 ;
 
 [[ lists
+\ map indiviual domains to the domain map
 : domains ( citylist n -- )
-  mapsquares 0 do
+  mapsquares 0 do ( list n )
     ldup 
     i strongest ( list n city)
-    dup if
+    dup i power@ if
       >id  @ 1+ 2*
       (domainmap) i  v!
-    then
+      else drop then
   loop
   drops
 ;
@@ -253,4 +258,7 @@ ctdecimals 2 + 10^ constant tradeprec%
   tradetable count dup * cells citytradefile filedump ;
 
 : ta allcities domainmap  ;
-: t2 warwick  csio 2  domainmap ;
+: t2 ossary  csio 2  domainmap ;
+
+: ? ( sq city -- sq)
+  over power@ . ;

@@ -16,21 +16,30 @@ definitions
   iterate ." Total trade: " .
 ;
 
+: domainmap! ( city -- )
+  costsofar cell+ over >domainmap @ count move
+  -1 swap >domainvalid ! ;
+
 : alltrade
   #cities times
-    i if
+  i if
+    i thcity >domainvalid @ 0= if
       i thcity >sq @ pixelpathAll
-      i times
-        i j <> if
-          ." From " i thcity dup >name count type tab
-          ." to " j thcity dup >name count type tab
-          traderoute
-          dup i j tradetable xy!
-          dup j i tradetable xy!
-          dup i thcity >trade +! j thcity >trade +!
-        then
-      iterate
+      i thcity domainmap!
+    else
+      i thcity >domainmap @ count costsofar cell+ swap move
     then
+    i times
+    i j <> if
+      ." From " i thcity dup >name count type tab
+      ." to " j thcity dup >name count type tab
+      traderoute
+      dup i j tradetable xy!
+      dup j i tradetable xy!
+      dup i thcity >trade +! j thcity >trade +!
+    then
+    iterate
+  then
   iterate
 ;
 
@@ -116,11 +125,68 @@ variable scale
   close>
 ;
 
-: domain ( city )
+: domain ( city --  )
   dup
   >sq @ pixelpathAll ( city)
-  costsofar cell+
-  swap >domainmap @ count move
+  domainmap!
+;
+
+
+: (fixup)
+  #cities times
+    i tradetable rowsum  i thcity >trade !
+  iterate
+;
+
+\ s" some code to be performed for each city" domac
+: domac ( caddr len -- ??? )
+  2>r
+  [[ cities  citystats ]] begin ( city )
+    next ?dup while
+      2r@ evaluate
+  repeat
+  2r> 2drop ;
+
+\ readback the ci
+: domainback ( city -- )
+  dup >domainvalid @ if
+    dup
+    >domainmap @ count
+    rot >name count s" .domainmap.bin" +suffix filedump
+    else drop  then
+;
+
+: domainrestore ( city -- )
+    dup>r
+    >name count s" .domainmap.bin" +suffix
+    r@ >domainmap @ ['] loadtable catch if 3 drops 0 else -1 then
+    r> >domainvalid !
+;
+
+[[ lists
+
+: restore
+  tradevolfile tradevol loadtable
+  citytradefile tradetable loadxtable
+  (fixup)
+  allcities ['] domainrestore foreach
+;
+
+: backup
+  tradevol count tradevolfile filedump
+  tradetable count dup * cells citytradefile filedump
+  allcities ['] domainback foreach
+;
+
+]]
+
+: domain? ( city -- )
+  dup>r
+  >domainvalid @ if rdrop else
+                   r@ domainrestore r@ >domainvalid @
+                   if rdrop else
+                     r> domain
+                   then then
 ;
 
 mapsquares cells allocate constant (domainmap)
@@ -134,7 +200,17 @@ mapsquares cells allocate constant (domainmap)
   >domainmap @  ( city sq domainvec)
   swap v@ ( city distance)
   over >civ @ 1+  ( city distance civ)
-  rot >pop @ ( dist civ pop) 100 * \ pseudo-rounding
+  rot >pop @ ( dist civ pop) 1000 * \ pseudo-rounding
+  rot 1 max
+  */ 500 -
+;
+
+: xpower@ ( city square -- val)
+  over
+  >domainmap @  ( city sq domainvec)
+  swap v@ ( city distance)
+  over >civ @ 1+  ( city distance civ)
+  rot >pop @ ( dist civ pop) * 2sqrt 1+ ( dist pc+1) 1000
   rot 1 max
   */
 ;
@@ -174,8 +250,9 @@ mapsquares cells allocate constant (domainmap)
 ;
 
 
+
 : domainmap ( citylist -- )
-  ldup ['] domain foreach
+  ldup ['] domain? foreach
   domains
   domainpgm open>
   startfile
@@ -231,32 +308,6 @@ ctdecimals 2 + 10^ constant tradeprec%
 
 : rep ( city )  dup .city ctrep% ;
 
-: (fixup)
-  #cities times
-    i tradetable rowsum  i thcity >trade !
-  iterate
-;
-
-\ s" some code to be performed for each city" domac
-: domac ( caddr len -- ??? )
-  2>r
-  [[ cities  citystats ]] begin ( city )
-    next ?dup while
-      2r@ evaluate
-  repeat
-  2r> 2drop ;
-
-\ readback the ci
-: restore
-  tradevolfile tradevol loadtable
-  citytradefile tradetable loadxtable
-  (fixup)
-;
-
-: backup
-  tradevol count tradevolfile filedump
-  tradetable count dup * cells citytradefile filedump ;
-
 : (city?)
   dup csio < if abort" Not a city" then ;
 
@@ -279,4 +330,5 @@ ctdecimals 2 + 10^ constant tradeprec%
 
 : ta allcities domainmap  ;
 : t2 warwick csio 2  domainmap ;
-: t3 warwick thunderhold  csio 3  domainmap ;
+: t3 warwick thunderhold  csio 3
+     domainmap ;

@@ -138,6 +138,7 @@ export{
   , over ! \ link field
   0 ,  \ zero trade field
   mapsquares cells allocate ,  \ holder for domainmap
+  0 , \ domainmap not yet valid
   dup #cities ,
   count++
 ;
@@ -164,6 +165,7 @@ export{
 cell:: >link
 cell:: >trade
 cell:: >domainmap
+cell:: >domainvalid
 cell:: >id
 cell:: >type
 cell:: >sq
@@ -221,6 +223,7 @@ export{
     tab ." Population: " r@ >pop @ . cr
     tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
     tab ." Trade: " r@ >trade @ dup . cr
+    tab ."  Domain map " r@ >domainvalid @ -if ." in" then ." valid" cr
     tab ." Wealth " r@ >pop @  / . cr
     tab ." Civilisation: " r@ >civ @ . cr
     tab ." Race: " r@ >race @ .race cr

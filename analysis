@@ -257,8 +257,26 @@ ctdecimals 2 + 10^ constant tradeprec%
   tradevol count tradevolfile filedump
   tradetable count dup * cells citytradefile filedump ;
 
-: ta allcities domainmap  ;
-: t2 ossary  csio 2  domainmap ;
+: (city?)
+  dup csio < if abort" Not a city" then ;
 
 : ? ( sq city -- sq)
-  over power@ . ;
+  (city?)
+  over power@ .
+;
+
+: cost
+  (city?)
+  >domainmap @ over v@ ;
+
+: cost? cost . ;
+
+: time? cost
+        1day /mod . ." days "
+        1hr /mod . ." hrs "
+        1hr 60 -rot */ . ." min" ;
+
+
+: ta allcities domainmap  ;
+: t2 warwick csio 2  domainmap ;
+: t3 warwick thunderhold  csio 3  domainmap ;

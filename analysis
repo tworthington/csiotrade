@@ -134,7 +134,7 @@ mapsquares cells allocate constant (domainmap)
   >domainmap @  ( city sq domainvec)
   swap v@ ( city distance)
   over >civ @ 1+  ( city distance civ)
-  rot >pop @ ( dist civ pop)
+  rot >pop @ ( dist civ pop) 100 * \ pseudo-rounding
   rot 1 max
   */
 ;

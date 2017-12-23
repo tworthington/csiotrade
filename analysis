@@ -262,6 +262,7 @@ mapsquares cells allocate constant (domainmap)
 ]]
 
 : globaltrademap
+\  [[ vectors tradevol clear ]]
   ns startns 2!
   alltrade trademap
   ns endns 2!

@@ -66,12 +66,13 @@ global{
 
 \ pad is caddr3
 : +suffix ( caddr1 len1 caddr2 len2 -- caddr3 len3)
+  pad 1024 erase
   2swap
   2dup pad swap move ( caddr2 len2 cadd1 len1)
   nip  ( caddr2 len2 len1)
   dup>r pad + ( caddr2 len2 caddr3b| len1)
   >r 2dup r> swap move  ( caddr2 len2 |len1)
-  nip r> + pad swap
+  nip r> + pad swap 1024 max
 ;
 
 \ Note the cell+ .... zmove!

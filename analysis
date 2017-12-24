@@ -20,26 +20,40 @@ definitions
   costsofar cell+ over >domainmap @ count move
   -1 swap >domainvalid ! ;
 
+[[ cities
+: reset-trade
+
+  [[ vectors
+  tradevol clear ]]
+  citystats begin 
+    next ?dup while
+      0 over >trade !
+  repeat
+;
+
+]]
+
 : alltrade
+  reset-trade
   #cities times
-  i if
-    i thcity >domainvalid @ 0= if
-      i thcity >sq @ pixelpathAll
-      i thcity domainmap!
-    else
-      i thcity >domainmap @ count costsofar cell+ swap move
+    i if
+      i thcity >domainvalid @ 0= if
+        i thcity >sq @ pixelpathAll
+        i thcity domainmap!
+      else
+        i thcity >domainmap @ count costsofar cell+ swap move
+      then
+      i times
+        i j <> if
+          ." From " i thcity dup >name count type tab
+          ." to " j thcity dup >name count type tab
+          traderoute
+          dup i j tradetable xy!
+          dup j i tradetable xy!
+          dup i thcity >trade +! j thcity >trade +!
+        then
+      iterate
     then
-    i times
-    i j <> if
-      ." From " i thcity dup >name count type tab
-      ." to " j thcity dup >name count type tab
-      traderoute
-      dup i j tradetable xy!
-      dup j i tradetable xy!
-      dup i thcity >trade +! j thcity >trade +!
-    then
-    iterate
-  then
   iterate
 ;
 
@@ -205,16 +219,6 @@ mapsquares cells allocate constant (domainmap)
   */ 500 -
 ;
 
-: xpower@ ( city square -- val)
-  over
-  >domainmap @  ( city sq domainvec)
-  swap v@ ( city distance)
-  over >civ @ 1+  ( city distance civ)
-  rot >pop @ ( dist civ pop) * 2sqrt 1+ ( dist pc+1) 1000
-  rot 1 max
-  */
-;
-
 : stronger ( city0 city1 square -- city )
   >r 2dup
   r@ power@
@@ -262,7 +266,10 @@ mapsquares cells allocate constant (domainmap)
 ]]
 
 : globaltrademap
-\  [[ vectors tradevol clear ]]
+  [[ vectors
+  tradevol clear
+  tradetable clear
+  ]]
   ns startns 2!
   alltrade trademap
   ns endns 2!

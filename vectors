@@ -35,7 +35,7 @@ definitions
 ;
 
 : clear ( vec)
-  count 0 fill ;
+  count erase ;
 
 : maximum ( vec )
   count ?dup if 2/ 2/ ( addr len)

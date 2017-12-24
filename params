@@ -76,11 +76,16 @@ global{
 ;
 
 \ Note the cell+ .... zmove!
+: (fix$) ( caddr1 len -- caddr2 len)
+  2dup align here swap ( caddr1 len caddr1 caddr2 len)
+  zmove ( caddr1 len)
+  here over ( caddr1 len caddr2 len)
+  cell+ allot  ( caddr1 len caddr2 )
+  -rot nip
+;
+
 : fix$ ( caddr len <name> -- )
-  align here ( caddr len $loc)
-  over cell+ allot
-  >r 2dup r@ swap zmove ( caddr len |: loc)
-  nip r> swap
+  (fix$)
   create , ,
   does> 2@
 ;

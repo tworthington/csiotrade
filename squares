@@ -138,7 +138,9 @@ variable #terrains
 
 : t$ ( n -- caddr len) 2* cells terrains$ + 2@ ;
 
-: t$! ( caddr len n -- ) 2* cells terrains$ + 2! ;  
+: t$! ( caddr len n -- )
+  -rot (fix$) rot
+  2* cells terrains$ + 2! ;  
 
 : self! ( n x -- ) dup costs xy! ;
 : self@ ( x -- ) dup costs xy@ ;
@@ -174,7 +176,7 @@ variable #terrains
   swap r> -rot cost!
 ;
 
-: +terrain ( <name> -- )
+: +terrain ( cost <name> -- )
   #terrains @ dup 256 = if abort" Too many terrains!" then
   save-input
   constant

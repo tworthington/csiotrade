@@ -22,9 +22,9 @@ global{
 : pqueue: ( size <name> -- )
     create
     here 0 , 0 , 0 ,  ( size header^)
-    over cells cell+ allocate  ( size header^ items^)
+    over cell+ allocate  ( size header^ items^)
     over (>items) + !   ( size header^)
-    swap cells allocate over (>priorities) + !  ( header^)
+    swap  allocate over (>priorities) + !  ( header^)
     clear
 ;
 

@@ -20,6 +20,8 @@ definitions
   costsofar cell+ over >domainmap @ count move
   -1 swap >domainvalid ! ;
 
+\ : domainmap! drop ;
+
 [[ cities
 : reset-trade
 
@@ -171,11 +173,13 @@ variable scale
 ;
 
 : domainrestore ( city -- )
-    dup>r
-    >name count s" .domainmap.bin" +suffix
-    r@ >domainmap @ ['] loadtable catch if 3 drops 0 else -1 then
-    r> >domainvalid !
+  dup>r
+  >name count s" .domainmap.bin" +suffix
+  r@ >domainmap @ ['] loadtable catch if 3 drops 0 else -1 then
+  r> >domainvalid !
 ;
+
+\ : domainrestore drop ;
 
 [[ lists
 
@@ -183,7 +187,7 @@ variable scale
   tradevolfile tradevol loadtable
   citytradefile tradetable loadxtable
   (fixup)
-  allcities ['] domainrestore foreach
+\  allcities ['] domainrestore foreach
 ;
 
 : backup
@@ -203,7 +207,7 @@ variable scale
                    then then
 ;
 
-mapsquares cells allocate constant (domainmap)
+mapsquares cells allocate constant (domainmap) 
 
 : -domainmap (domainmap) count erase ;
 
@@ -246,14 +250,13 @@ mapsquares cells allocate constant (domainmap)
     ldup 
     i strongest ( list n city)
     dup i power@ if
-      >id  @ 1+ 2*
+      >id  @ 1+
       (domainmap) i  v!
-      else drop then
+    else drop
+    then
   loop
   drops
 ;
-
-
 
 : domainmap ( citylist -- )
   ldup ['] domain? foreach
@@ -337,6 +340,10 @@ ctdecimals 2 + 10^ constant tradeprec%
 
 
 : ta allcities domainmap  ;
-: t2 warwick csio 2  domainmap ;
-: t3 warwick thunderhold  csio 3
-     domainmap ;
+: t2 cswe csio 2  domainmap ;
+: t3 warwick cswe csio 3  domainmap ;
+
+\ Pareto wealth: (families/totalfams)^((1.16-1)/1.16)*T
+\ where 1.16 is the inequality. 1= no inequality
+\ and T is total trade
+\ (families/totalfams)^((1.16-1)/1.16)*T/families gives average wealth per family

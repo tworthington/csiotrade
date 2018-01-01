@@ -138,6 +138,7 @@ export{
   , over ! \ link field
   0 ,  \ zero trade field
   mapsquares cells allocate ,  \ holder for domainmap
+\  0 ,
   0 , \ domainmap not yet valid
   dup #cities ,
   count++
@@ -260,8 +261,6 @@ does> ( city this -- city| )
   iterate
   depth r> - nip
 ;
-
-
 
 }export
 

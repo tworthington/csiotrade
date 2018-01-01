@@ -55,7 +55,6 @@ sqrts @ 4 / +vector: bestmove
     destination @ >xy qdist
 ;
 
-
 : qdist
     rot - dup * ( x1 x2 dy²)
     -rot - dup *
@@ -126,7 +125,6 @@ sqrts @ 4 / +vector: bestmove
 : update ( from next cost)
   2dup costsofar rot v!
   2dup ( from next cost next cost)
-  over heuristic +
   frontier -val
   drop
   camefrom swap v!

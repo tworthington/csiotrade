@@ -1,7 +1,5 @@
 wordlist: utils
 
-50000000 expand drop
-
 : ]+
   ] lit
   postpone +
@@ -22,7 +20,6 @@ wordlist: utils
   dup 17 rshift xor
   dup  5 lshift xor ;
 
-
 variable (rnd)     \ seed
 2463534242 (rnd) ! \ initialize seed
 
@@ -32,6 +29,10 @@ variable (rnd)     \ seed
 : turb ( x sq -- x+0-10%)
   xorshift abs 11 mod 100 + 100 */
 ;
+
+: <=> ( n1 n2 -- -1|0|1)
+  2dup = if 2drop 0 else
+    < if  1 else -1 then then ;
 
 : $delimit
   char parse   ( caddr len)

@@ -52,10 +52,16 @@ variable (case)
 : of 1 (case) +! postpone if ; immediate
 : endof postpone else ; immediate
 
+: defer create ['] nop , does> @ execute ;
+
+: is ( xt <word> )
+  ' swap >pf @ !
+;
+
 : digression ( <word> <char>file<char> -- )
   bl word find nip
   $delimit     ( flag caddr len)
-  rot if  2drop  else  included  then
+  rot if  2drop  else 2dup s" Loading " type type cr  included s" Done" type cr then
 ;
 
 : (linerr)
@@ -183,9 +189,8 @@ variable (case)
 
 : ," postpone s" ( caddr cnt)
     dup ,
-    here over allot
-    swap move
-    align
+    here over 1+ allot  
+    swap zmove
 ;
 
 : enums: 0 do  i constant  loop ;

@@ -1,6 +1,7 @@
 [[ cities
 
 0 0 offset!
+1 campaignmap !
 
 \ (link) (trade) (type) xy pop name  civ/lv race/class alignment  city/cit
 \     name    x  y    pop       civ  race  align printName

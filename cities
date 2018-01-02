@@ -6,6 +6,7 @@ get-current
 cities first definitions
 
 create (offset) 0 ,
+variable campaignmap
 
 : offset! ( x y -- ) xy>sq (offset) ! ;
 
@@ -138,9 +139,9 @@ export{
   , over ! \ link field
   0 ,  \ zero trade field
   mapsquares cells allocate ,  \ holder for domainmap
-\  0 ,
   0 , \ domainmap not yet valid
   dup #cities ,
+  campaignmap @ ,
   count++
 ;
 
@@ -168,6 +169,7 @@ cell:: >trade
 cell:: >domainmap
 cell:: >domainvalid
 cell:: >id
+cell:: >map
 cell:: >type
 cell:: >sq
 cell:: >pop
@@ -222,7 +224,7 @@ export{
     >name count type cr
     tab ." id:" r@ >id @ . cr
     tab ." Population: " r@ >pop @ . cr
-    tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" cr
+    tab ." Location: " r@ >sq @ . ."  ( " r@ >sq @ .xy ." )" ."  on map " r@ >map @ . cr
     tab ." Trade: " r@ >trade @ dup . cr
     tab ."  Domain map " r@ >domainvalid @ -if ." in" then ." valid" cr
     tab ." Wealth " r@ >pop @  / . cr

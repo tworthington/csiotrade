@@ -2,6 +2,7 @@
 
 \ Map 1
 1807 0 offset!
+1 campaignmap !
 
 \     name    x  y    pop       civ  race  align printName
 city: csio 887 907 >sq, 20000 , 8 , human , N , ," CSIO"
@@ -107,7 +108,7 @@ city: searune 1687 1054 >sq, 135 , 5 , human , CG , ," Sea Rune"
 
 \ Map 6
 0 0 offset!
-
+6 campaignmap !
 \     name    x  y    pop        civ  race  align printName
 city: daican  80 246 >sq, 167 , 5 , human , N , ," Daican"
 city: pamakillip  81 720 >sq, 382 , 9 , human , N , ," Pamak Illip"
